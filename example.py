@@ -1,58 +1,39 @@
 # Sample code to use the Netflix python client
 
 from Netflix import *
+import ConfigParser
 import getopt
 import time 
+import sys
+import pprint
 
-APP_NAME   = ''
-API_KEY    = ''
-API_SECRET = ''
-CALLBACK   = ''
-        
-EXAMPLE_USER = {
-        'request': {
-                'key': '',
-                'secret': ''
-        },
-        'access': {
-                'key': '',
-                'secret': ''
-        }
-}
+def get_auth(netflix, appname, verbose):
+    (request_token, url) = netflix.get_request_token(use_OOB = True)
+    print "Go to %s, sign in and grant permission to netflix account to [%s]" % (url, appname)
 
-
-
-def getAuth(netflix, verbose):
-    netflix.user = NetflixUser(EXAMPLE_USER,netflix)
+    pin = raw_input('Please enter Verifier Code:')
+    access_token = netflix.get_access_token(request_token, pin)
+    user = NetflixUser(access_token, netflix)
+    print "now put this key / secret in ~/.pyflix.cfg so you don't have to \
+                    re-authorize again:\n 'key': '%s',\n 'secret': '%s'\n" % (access_token.key, access_token.secret)
     
-    if EXAMPLE_USER['request']['key'] and not EXAMPLE_USER['access']['key']:
-      tok = netflix.user.getAccessToken( EXAMPLE_USER['request'] )
-      print "now put this key / secret in EXAMPLE_USER.access so you don't have to re-authorize again:\n 'key': '%s',\n 'secret': '%s'\n" % (tok.key, tok.secret)
-      EXAMPLE_USER['access']['key'] = tok.key
-      EXAMPLE_USER['access']['secret'] = tok.secret
-      sys.exit(1)
+    return access_token
 
-    elif not EXAMPLE_USER['access']['key']:
-      (tok, url) = netflix.user.getRequestToken()
-      print "Authorize user access here: %s" % url
-      print "and then put this key / secret in EXAMPLE_USER.request:\n 'key': '%s',\n 'secret': '%s'\n" % (tok.key, tok.secret)
-      print "and run again."
-      sys.exit(1)
-    return netflix.user
-
-def doSearch(netflix, discs, arg):
+def do_search(netflix, discs, title):
     ######################################
     # Search for titles matching a string.
     # To view all of the returned object, 
     # you can add a simplejson.dumps(info)
     ######################################  
-    print "*** RETRIEVING MOVIES MATCHING %s ***" % arg
-    data = netflix.catalog.searchTitles(arg,0,10)
-    for info in data:
-        print info['title']['regular']
+    print "*** RETRIEVING MOVIES MATCHING %s ***" % title 
+    data = netflix.search_titles(title, 0, 10)
+    pprint.pprint(data)
+    for info in data[u'catalog_title']:
+        pprint.pprint(info)
+        print info[u'title'][u'short']
         discs.append(info)
 
-def doAutocomplete(netflix,arg):
+def do_autocomplete(netflix,arg):
     ######################################
     # Use autocomplete to retrieve titles
     # starting with a specified string.
@@ -60,26 +41,26 @@ def doAutocomplete(netflix,arg):
     # you can add a simplejson.dumps(info)
     ######################################  
     print "*** First thing, we'll search for " + arg + " as a string and see if that works ***"
-    autocomplete = netflix.catalog.searchStringTitles(arg)
+    autocomplete = netflix.catalog.search_string_titles(arg)
     print simplejson.dumps(autocomplete)
     for info in autocomplete:
         print info['title']['short']
-    
-def getTitleFromID(netflix,arg):
+
+def get_title_from_id(netflix,arg):
     ######################################
-    # Grab a specific title from the ID. 
+    # grab a specific title from the ID. 
     # The ID is available as part of the
     # results from most queries (including
     # the ones above.
     ######################################  
     print "*** Now we'll go ahead and try to retrieve a single movie via ID string ***"
     print "Checking for " + arg
-    movie = netflix.catalog.getTitle(arg)
+    movie = netflix.catalog.get_title(arg)
     if movie['catalog_title']['title']['regular'] == "Flip Wilson":
         print "It's a match, woo!"
     return movie
 
-def getTitleInfo(netflix,movie):
+def get_title_info(netflix,movie):
     ######################################
     # You can retrieve information about 
     # a specific title based on the 'links'
@@ -87,25 +68,25 @@ def getTitleInfo(netflix,movie):
     ######################################  
     print "*** Let's grab the format for this movie ***"
     disc = NetflixDisc(movie['catalog_title'],netflix)
-    formats = disc.getInfo('formats')
+    formats = disc.get_info('formats')
     print "Formats: %s" % simplejson.dumps(formats,indent=4)
 
     print "*** And the synopsis ***"
-    synopsis = disc.getInfo('synopsis')
+    synopsis = disc.get_info('synopsis')
     print "Synopsis: %s" % simplejson.dumps(synopsis, indent=4)
 
     print "*** And the cast ***"
-    cast = disc.getInfo('cast')
+    cast = disc.get_info('cast')
     print "Cast: %s" % simplejson.dumps(cast, indent=4)
 
-def findPerson(netflix, arg, id):
+def find_person(netflix, arg, id):
     ######################################
     # You can search for people or retrieve
     # a specific person once you know their
     # netflix ID
     ######################################  
     print "*** Searching for %s ***" % arg
-    person = netflix.catalog.searchPeople(arg)
+    person = netflix.catalog.search_people(arg)
     if isinstance(person,dict):
         print simplejson.dumps(person,indent=4)
     elif isinstance(person,list):
@@ -114,11 +95,11 @@ def findPerson(netflix, arg, id):
         print "No match"
 
     print "*** Now let's retrieve a person by ID ***"
-    newPerson = netflix.catalog.getPerson(id)
-    if isinstance(newPerson,dict):
-        print simplejson.dumps(newPerson,indent=4)
+    new_person = netflix.catalog.get_person(id)
+    if isinstance(new_person,dict):
+        print simplejson.dumps(new_person,indent=4)
 
-def getRatings(netflix,user, discs):
+def get_ratings(netflix,user, discs):
     ######################################
     # Ratings are available from each disc,
     # or if you've got a specific user you
@@ -127,7 +108,7 @@ def getRatings(netflix,user, discs):
     ######################################  
     if (user):
         print "*** Let's grab some ratings for all the titles that matched initially ***"
-        ratings =  user.getRatings( discs )
+        ratings =  user.get_ratings( discs )
         print "ratings = %s" % (simplejson.dumps(ratings,indent=4))
     else:
         print "*** No authenticated user, so we'll just look at the average rating for the movies.***"
@@ -135,11 +116,11 @@ def getRatings(netflix,user, discs):
             print "%s : %s" % (disc['title']['regular'],disc['average_rating'])
 
 
-def getUserInfo(netflix,user):
+def get_user_info(netflix,user):
     print "*** Who is this person? ***"
-    userData = user.getData()
-    print "%s %s" % (userData['first_name'], userData['last_name'])
-    
+    user_data = user.get_data()
+    print "%s %s" % (user_data['first_name'], user_data['last_name'])
+
     ######################################
     # User subinfo is accessed similarly
     # to disc subinfo.  Find the field
@@ -147,50 +128,50 @@ def getUserInfo(netflix,user):
     # retrieve that url and get that info
     ######################################
     print "*** What are their feeds? ***"
-    feeds = user.getInfo('feeds')
+    feeds = user.get_info('feeds')
     print simplejson.dumps(feeds,indent=4)
 
     print "*** Do they have anything at home? ***"
-    feeds = user.getInfo('at home')
+    feeds = user.get_info('at home')
     print simplejson.dumps(feeds,indent=4)
 
     print "*** Show me their recommendations ***"
-    recommendations = user.getInfo('recommendations')
+    recommendations = user.get_info('recommendations')
     print simplejson.dumps(recommendations,indent=4)
 
     ######################################
     # Rental History
     ######################################
     # Simple rental history
-    history = netflix.user.getRentalHistory()
+    history = netflix.user.get_rental_history()
     print simplejson.dumps(history,indent=4)
 
     # A little more complicated, let's use mintime to get recent shipments
-    history = netflix.user.getRentalHistory('shipped',updatedMin=1219775019,maxResults=4)
+    history = netflix.user.get_rental_history('shipped',updated_min=1219775019,max_results=4)
     print simplejson.dumps(history,indent=4)
 
-def userQueue(netflix,user):
+def user_queue(netflix,user):
     ######################################
     # Here's a queue.  Let's play with it
     ######################################
     queue = NetflixUserQueue(netflix.user)
     print "*** Add a movie to the queue ***"
-    print simplejson.dumps(queue.getContents(), indent=4)
-    print queue.addTitle( urls=["http://api.netflix.com/catalog/titles/movies/60002013"] )
+    print simplejson.dumps(queue.get_contents(), indent=4)
+    print queue.add_title( urls=["http://api.netflix.com/catalog/titles/movies/60002013"] )
     print "*** Move it to the top! ***"
-    print queue.addTitle( urls=["http://api.netflix.com/catalog/titles/movies/60002013"], position=1 )
+    print queue.add_title( urls=["http://api.netflix.com/catalog/titles/movies/60002013"], position=1 )
     print "*** Take it out ***"
-    print queue.removeTitle( id="60002013")
-    
-    discAvailable = queue.getAvailable('disc')
-    print  "discAvailable" + simplejson.dumps(discAvailable)
-    instantAvailable =  queue.getAvailable('instant')
-    print "instantAvailable" + simplejson.dumps(instantAvailable)
-    discSaved =  queue.getSaved('disc')
-    print "discSaved" + simplejson.dumps(discSaved)
-    instantSaved = queue.getSaved('instant')
-    print "instantSaved" + simplejson.dumps(instantSaved)
-    
+    print queue.remove_title( id="60002013")
+
+    disc_available = queue.get_available('disc')
+    print  "disc_available" + simplejson.dumps(disc_available)
+    instant_available =  queue.get_available('instant')
+    print "instant_available" + simplejson.dumps(instant_available)
+    disc_saved =  queue.get_saved('disc')
+    print "disc_saved" + simplejson.dumps(disc_saved)
+    instant_saved = queue.get_saved('instant')
+    print "instant_saved" + simplejson.dumps(instant_saved)
+
 if __name__ == '__main__':  
     try:
             opts, args = getopt.getopt(sys.argv[1:], "qva")
@@ -210,34 +191,41 @@ if __name__ == '__main__':
         if o == '-a':
             usertoken = True
 
-    netflixClient = NetflixClient(APP_NAME, API_KEY, API_SECRET, CALLBACK, verbose)
+    config_parser = ConfigParser.ConfigParser()
+    config_parser.read(['pyflix.cfg', os.path.expanduser('~/.pyflix.cfg')])
+    config = lambda key: config_parser.get('pyflix', key)
+    netflix_client = NetflixAPIV1( appname=config('app_name'), 
+                                   consumer_key=config('consumer_key'),
+                                   consumer_secret=config('consumer_secret'), 
+                                   logger=sys.stderr)
     if usertoken:
-        user = getAuth(netflixClient,verbose)
+        access_token = get_auth(netflix_client, config('app_name'), verbose)
+        user = NetflixUser(access_token, netflix_client)
     else:
         user = None
     discs=[]
-    
+
     # Basic search functions
     for arg in args:
-        doSearch(netflixClient,discs,arg)
+        do_search(netflix_client,discs,arg)
 
     # Note that we have to sleep between queries to avoid the per-second cap on the API
     time.sleep(1)
-    doAutocomplete(netflixClient,'Coc')
+    do_autocomplete(netflix_client,'Coc')
     time.sleep(1)
-    movie = getTitleFromID(netflixClient,'http://api.netflix.com/catalog/titles/movies/60002013')
+    movie = get_title_from_i_d(netflix_client,'http://api.netflix.com/catalog/titles/movies/60002013')
     time.sleep(1)
-    getTitleInfo(netflixClient,movie)
+    get_title_info(netflix_client,movie)
     time.sleep(1)
-    findPerson(netflixClient,"Harrison Ford", "http://api.netflix.com/catalog/people/78726")
-    
+    find_person(netflix_client,"Harrison Ford", "http://api.netflix.com/catalog/people/78726")
+
     # Ratings (with/without user)
     if discs:
-        getRatings(netflixClient,user, discs)
+        get_ratings(netflix_client,user, discs)
         time.sleep(1)
-        
+
     # User functions
     if user:
-        getUserInfo(netflixClient,user)
+        get_user_info(netflix_client,user)
         time.sleep(1)
-        userQueue(netflixClient,user)
+        user_queue(netflix_client,user)

@@ -1,110 +1,79 @@
 # Sample code to use the Netflix python client
 import unittest, os
 import simplejson
+import pprint
 from Netflix import *
-
-APP_NAME   = ''
-API_KEY    = ''
-API_SECRET = ''
-CALLBACK   = ''
+import ConfigParser
 
 MOVIE_TITLE = "Foo Fighters"
 
-EXAMPLE_USER = {
-        'request': {
-                'key': '',
-                'secret': ''
-        },
-        'access': {
-                'key': '',
-                'secret': ''
-        }
-}
+class TestNetflixAPIV1(unittest.TestCase):
 
-EMPTY_USER = {
-        'request': {
-                'key': '',
-                'secret': ''
-        },
-        'access': {
-                'key': '',
-                'secret': ''
-        }
-}
+    def setUp(self):
+        config_parser = ConfigParser.ConfigParser()
+        config_parser.read(['pyflix.cfg', os.path.expanduser('~/.pyflix.cfg')])
+        config = lambda key: config_parser.get('pyflix', key)
+        self.netflix = NetflixAPIV1( appname=config('app_name'), 
+                                   consumer_key=config('consumer_key'),
+                                   consumer_secret=config('consumer_secret'), 
+                                   access_token=config('access_token'),
+                                   access_token_secret=config('access_token_secret'),
+                                   logger=sys.stderr)
 
-APP_NAME   = 'Movie browser'
-API_KEY    = 'nbf4kr594esg4af25qexwtnu'
-API_SECRET = 'SSSeTdsPsM'
-CALLBACK   = 'http://www.synedra.org'
+    def test_token_functions(self):
+        pass
+        # I'd love to test the token functions, but unfortunately running these
+        # invalidates the existing tokens.  Foo.
 
-EXAMPLE_USER = {
-        'request': {
-                'key': 'guzwtx7epxmbder6dx5n2t7a',
-                'secret': 'D8HrxmaQ7YRr'
-        },
-        'access': {
-                'key': 'T1i0pqrkyEfVCl3NVbrSCMvFg0fPup3TsQ7bAQjN35XZcmuS9WDK7oVOkZdE6iGg8HkhEp4VQn7sSB.kILNu2HiQ--',
-                'secret': 'efMFPEPZ35f6'
-        }
-}
 
-class TestQuery():
-	def test_base(self):
-		netflixClient = NetflixClient(APP_NAME, API_KEY, API_SECRET, CALLBACK)
-		
-	def test_token_functions(self):
-		netflixClient = NetflixClient(APP_NAME, API_KEY, API_SECRET, CALLBACK)
-		netflixUser = NetflixUser(EMPTY_USER,netflixClient)
-		# I'd love to test the token functions, but unfortunately running these
-		# invalidates the existing tokens.  Foo.
+    def test_catalog_functions(self):
+        titles = self.netflix.search_titles('Matrix', max_results=2)
+        for title in titles[u'catalog_titles'][u'catalog_title']:
+            self.assertIsNotNone(title[u'title'][u'regular'])
+            self.assertIsNotNone(title[u'id'])
+        self.assertEqual(len(titles['catalog_titles'][u'catalog_title']), 2) 
 
-		
-	def test_catalog_functions(self):
-		netflixClient = NetflixClient(APP_NAME, API_KEY, API_SECRET, CALLBACK)
-		data = netflixClient.catalog.searchStringTitles('Foo')
-		for info in data:
-			assert re.search('Foo',info['title']['short'])
-			
-		data = netflixClient.catalog.searchTitles(MOVIE_TITLE)
-		assert isinstance(data[0]['title']['regular'],unicode)
-		
-		movie = netflixClient.catalog.getTitle(data[0]['id'])
-		assert isinstance(movie['catalog_title']['title']['regular'],unicode)
-		
-		people = netflixClient.catalog.searchPeople('Flip Wilson',maxResults=1)
-		assert isinstance(people,dict)
-		
-	# DISC TESTS
-	def test_disc_functions(self):
-		netflixClient = NetflixClient(APP_NAME, API_KEY, API_SECRET, CALLBACK)
-		data = netflixClient.catalog.searchTitles('Cocoon',1,2)
-		testSubject = data[0]
-		disc = NetflixDisc(testSubject,netflixClient)
-		formats = disc.getInfo('formats')
-		assert isinstance(formats,dict)
-		synopsis = disc.getInfo('synopsis')
-		assert isinstance(synopsis,dict)	  
-				
-	def test_user_functions(self):
-		netflixClient = NetflixClient(APP_NAME, API_KEY, API_SECRET, CALLBACK)
-		netflixUser = NetflixUser(EXAMPLE_USER,netflixClient)
-		user = netflixUser.getData()
-		assert isinstance(user['first_name'],unicode)
-		data = netflixClient.catalog.searchTitles('Cocoon',1,2)
-		ratings = netflixUser.getRatings(data)
-		history = netflixUser.getRentalHistory('shipped',updatedMin=1219775019,maxResults=4)
-		assert int(history['rental_history']['number_of_results']) <= 5
-		
-		queue = NetflixUserQueue(netflixUser)
-		response = queue.addTitle( urls=["http://api.netflix.com/catalog/titles/movies/60002013"] )
-		response = queue.addTitle( urls=["http://api.netflix.com/catalog/titles/movies/60002013"], position=1 )
-		response = queue.removeTitle( id="60002013")
+        autocomplete_titles = self.netflix.title_autocomplete("matrix")
+        for title in autocomplete_titles[u'autocomplete'][u'autocomplete_item']:
+            self.assertIn('matrix', title['title']['short'].lower())
 
-		discAvailable = queue.getAvailable('disc')
-		instantAvailable =  queue.getAvailable('instant')
-		discSaved =  queue.getSaved('disc')
-		instantSaved = queue.getSaved('instant')
-		
+        # catalog = self.netflix.get_catalog()
+
+        #people = netflix_client.catalog.search_people('Flip Wilson', max_results=1)
+        #self.assertIsInstance(people, dict)
+
+##    # DISC TESTS
+#    def test_disc_functions(self):
+#        return  
+#        data = netflix_client.catalog.search_titles('Cocoon', 1, 2)
+#        test_subject = data[0]
+#        disc = NetflixDisc(testSubject, netflix_client)
+#        formats = disc.get_info('formats')
+#        self.assertIsInstance(formats, dict)
+#        synopsis = disc.get_info('synopsis')
+#        self.assertIsInstance(synopsis, dict)
+#
+#    def test_user_functions(self):
+#        return 
+#        netflix_user = NetflixUser(EXAMPLE_USER,netflixClient)
+#        user = netflix_user.get_data()
+#        self.assertIsInstance(user['first_name'], str)
+#        data = netflix_client.catalog.search_titles('Cocoon',1,2)
+#        ratings = netflix_user.getRatings(data)
+#        history = netflix_user.get_rental_history('shipped',updated_min=1219775019,max_results=4)
+#        pprint.pprint(history)
+#        self.assertTrue(int(history['rental_history']['number_of_results']) <= 5)
+#
+#        queue = NetflixUserQueue(netflix_user)
+#        response = queue.add_title( urls=["http://api.netflix.com/catalog/titles/movies/60002013"] )
+#        response = queue.add_title( urls=["http://api.netflix.com/catalog/titles/movies/60002013"], position=1 )
+#        response = queue.remove_title( id="60002013")
+#
+#        disc_available = queue.get_available('disc')
+#        instant_available =  queue.get_available('instant')
+#        disc_saved =  queue.get_saved('disc')
+#        instant_saved = queue.get_saved('instant')
+
 
 if __name__ == '__main__':
-    unittest.main() 
+    unittest.main()
