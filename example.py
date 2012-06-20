@@ -7,6 +7,8 @@ import time
 import sys
 import pprint
 
+__version__ = '0.13.0'
+
 def get_auth(netflix, appname, verbose):
     (request_token, url) = netflix.get_request_token(use_OOB = True)
     print "Go to %s, sign in and grant permission to netflix account to [%s]" % (url, appname)

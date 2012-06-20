@@ -17,6 +17,8 @@ import simplejson
 from urlparse import urlparse, parse_qs, parse_qsl, urlunparse
 import urllib
 
+__version__ = "0.1.1"
+
 BASE_URL= 'http://api.netflix.com'
 REQUEST_TOKEN_URL = 'http://api.netflix.com/oauth/request_token'
 ACCESS_TOKEN_URL = 'http://api.netflix.com/oauth/access_token'
@@ -348,7 +350,6 @@ class NetflixAPI(object):
             access_token_secret=None, logger=None):
         """ Constructs the :class:`NetflixAPI`
 
-        :Parameters:
         :param appname: The Application name as registered in Netflix Developer 
             website <http://developer.netflix.com/apps/mykeys>
         :param consumer_key: The consumer key as registered in Netlflix Developer website
@@ -441,7 +442,6 @@ class NetflixAPI(object):
         """Use the catalog titles resource to search the netflix movie catalog(includes all medium)
         for titles of movies and television series. 
 
-        :Parameters:
         :param term: The word or term to search the catalog for. The Netflix
             API searches the title and synopses of catalog titles for a match.
         :param filter: The filter could be either the string `"instant"` or `"disc"`
@@ -480,7 +480,6 @@ class NetflixAPI(object):
         to conduct the actual title search. You can only autocomplete titles 
         (not other items, like names of actors).
 
-        :Parameters:
         :param start_index:  (optional) The zero-based offset into the list that results from the query.
         :param max_results: (optinoal) The maximum number of results to return. 
 
@@ -582,7 +581,6 @@ class NetflixAPIV1(NetflixAPI):
             access_token_secret=None, logger=None):
         """ Constructs the :class:`NetflixAPIV1`
 
-        :Parameters:
         :param appname: The Application name as registered in Netflix Developer 
             website <http://developer.netflix.com/apps/mykeys>
         :param consumer_key: The consumer key as registered in Netlflix Developer website
@@ -600,7 +598,6 @@ class NetflixAPIV1(NetflixAPI):
         """Use the catalog titles resource to search the netflix movie catalog(includes all medium)
         for titles of movies and television series. 
 
-        :Parameters:
         :param term: The word or term to search the catalog for. The Netflix
             API searches the title and synopses of catalog titles for a match.
         :param start_index:  (optional) The zero-based offset into the list that results
@@ -622,7 +619,6 @@ class NetflixAPIV2(NetflixAPI):
             access_token_secret=None, logger=None):
         """ Constructs the :class:`NetflixAPIV2`
 
-        :Parameters:
         :param appname: The Application name as registered in Netflix Developer 
             website <http://developer.netflix.com/apps/mykeys>
         :param consumer_key: The consumer key as registered in Netlflix Developer website
@@ -640,7 +636,6 @@ class NetflixAPIV2(NetflixAPI):
         """Use the catalog titles resource to search the netflix movie catalog(includes all medium)
         for titles of movies and television series. 
 
-        :Parameters:
         :param term: The word or term to search the catalog for. The Netflix
             API searches the title and synopses of catalog titles for a match.
         :param filter: The filter could be either the string `"instant"` or `"disc"`

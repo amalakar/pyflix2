@@ -1,6 +1,6 @@
 from setuptools import setup
-setup(	name="Netflix",
+setup(	name="pyflix2",
 	version="1.0",
-	py_modules = ['Netflix'],
-	install_requires=['simplejson','requests', 'requests-oauth']
+	py_modules = ['pyflix2'],
+	install_requires=['requests', 'requests-oauth']
 	)	
