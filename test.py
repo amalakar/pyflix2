@@ -37,6 +37,7 @@ class TestNetflixAPIV1(unittest.TestCase):
         for title in autocomplete_titles[u'autocomplete'][u'autocomplete_item']:
             self.assertIn('matrix', title['title']['short'].lower())
 
+        # Following call downloads the whole catalog so it is bit of heavy-lifting
         # catalog = self.netflix.get_catalog()
 
         #people = netflix_client.catalog.search_people('Flip Wilson', max_results=1)
@@ -74,6 +75,53 @@ class TestNetflixAPIV1(unittest.TestCase):
 #        disc_saved =  queue.get_saved('disc')
 #        instant_saved = queue.get_saved('instant')
 
+class TestNetflixAPIV2(unittest.TestCase):
+
+    def setUp(self):
+        config_parser = ConfigParser.ConfigParser()
+        config_parser.read(['pyflix.cfg', os.path.expanduser('~/.pyflix.cfg')])
+        config = lambda key: config_parser.get('pyflix', key)
+        self.netflix2 = NetflixAPIV2( appname=config('app_name'), 
+                                   consumer_key=config('consumer_key'),
+                                   consumer_secret=config('consumer_secret'), 
+                                   access_token=config('access_token'),
+                                   access_token_secret=config('access_token_secret'),
+                                   logger=sys.stderr)
+
+    def test_token_functions(self):
+        pass
+        # I'd love to test the token functions, but unfortunately running these
+        # invalidates the existing tokens.  Foo.
+
+
+    def test_catalog_functions(self):
+        # Test the filter capabilities, search with the same search term but with different filter
+        # their total result should not match, showing the result set is different
+        titles_instant = self.netflix2.search_titles('Matrix', max_results=25, filter="instant", expand="@box_art")
+        pprint.pprint(titles_instant)
+        for title in titles_instant[u'catalog']:
+            self.assertIsNotNone(title[u'box_art'])
+            self.assertIsNotNone(title[u'id'])
+        self.assertEqual(int(titles_instant['results_per_page']), 25)
+
+        movie = self.netflix2.get_resource(titles_instant['catalog'][0]['id'])
+
+        titles_disc = self.netflix2.search_titles('Matrix', filter="disc")
+        self.assertNotEqual(titles_instant['number_of_results'], titles_disc['number_of_results'])
+
+        autocomplete_titles_instant= self.netflix2.title_autocomplete("matrix", filter="instant")
+        autocomplete_titles_disc = self.netflix2.title_autocomplete("matrix", filter="disc")
+        
+        instant_count = None
+        disc_count = None
+        if autocomplete_titles_instant['autocomplete']:
+            instant_count = len(autocomplete_titles_instant['autocomplete']['title'])
+        if autocomplete_titles_disc['autocomplete']:
+            disc_count = len(autocomplete_titles_disc['autocomplete']['title'])
+        self.assertNotEqual(instant_count, disc_count)
+#        for title in autocomplete_titles[u'autocomplete'][u'autocomplete_item']:
+#            self.assertIn('matrix', title['title']['short'].lower())
+#
 
 if __name__ == '__main__':
     unittest.main()

@@ -24,6 +24,9 @@ ACCESS_TOKEN_URL = 'http://api.netflix.com/oauth/access_token'
 AUTHORIZATION_URL = 'https://api-user.netflix.com/oauth/authenticate'
 NETFLIX_FILTER = {'disc': 'http://api.netflix.com/categories/title_formats/disc',
                   'instant': 'http://api.netflix.com/categories/title_formats/instant'}
+EXPANDS = ["@title", "@box_art", "@synopsis", "@short_synopsis", "@format_availability", "@screen_formats",
+          "@cast", "@directors", "@languages_and_audio", "@awards", "@similars", "@bonus_materials",
+          "@seasons", "@episodes", "@discs"]
 
 
 
@@ -37,12 +40,6 @@ class OAuthToken(object):
 
 
 class NetflixUser():
-
-    def __init__(self, access_token, client):
-        self.access_token = access_token
-        self.client = client
-        self.data = None
-
 
     def get_data(self):
         access_token=self.access_token
@@ -399,7 +396,15 @@ class NetflixAPI(object):
         self._user_credential_set = True
 
     def get_request_token(self, use_OOB = True):
-        """Obtains the request token/secret and the authentication URL"""
+        """Obtains the request token/secret and the authentication URL
+
+        :param use_OOB: if set to false the oauth out-of-bound authentication is used
+            which requires the user to go to nerflix website and get the verfication code
+            and provide here
+
+        :Returns:
+            Returns the triplet ``(request_token, request_token_secret , url)``
+        """
 
         # Step 1: Obtain the request Token
         request_oauth_hook = OAuthHook()
@@ -424,26 +429,39 @@ class NetflixAPI(object):
         auth_url = self._append_param(response['login_url'][0], params)
         return (OAuthToken(request_token, request_secret), auth_url )
 
-    def get_access_token(self, request_token, oauth_verifier = None):
+    def get_access_token(self, request_token, request_token_secret, oauth_verification_code = None):
+        """Obtains the access token/secret, given:
+        - They request_token and request_token_secret has been authorized  by visiting the netflix authorization URL by user
+        - The user has obtained the verification code (when `use_OOB` was set in `get_request_token` from netflix website
+
+        :param request_token: The request token obtained using :meth: get_request_token 
+        :param request_token_secret: The request token secret obtained using :meth: get_request_token 
+        :param oauth_verification_code: The verification code obtained from netflix website, if `use_OOB` was set to `True` in :meth: get_request_token 
+
+        :Returns:
+            Returns the pair ``(access_token, access_token_secret)``
+        """
         # Step 3: Obtain access token
-        access_oauth_hook = OAuthHook(request_token.key, request_token.secret)
+        access_oauth_hook = OAuthHook(request_token, request_token_secret)
         client = requests.session( hooks={'pre_request': access_oauth_hook})
         params = {'oauth_token': request_token.key}
 
-        if oauth_verifier:
-            params['oauth_verifier'] = oauth_verifier
+        if oauth_verification_code:
+            params['oauth_verifier'] = oauth_verification_code
         response = client.post(ACCESS_TOKEN_URL, params)
 
         response = parse_qs(response.content)
-        return OAuthToken(response['oauth_token'][0], response['oauth_token_secret'][0])
+        return (response['oauth_token'][0], response['oauth_token_secret'][0])
 
-    def search_titles(self, term, filter=None, start_index=None, max_results=None):
+    def search_titles(self, term, filter=None, expand=None, start_index=None, max_results=None):
         """Use the catalog titles resource to search the netflix movie catalog(includes all medium)
         for titles of movies and television series. 
 
         :param term: The word or term to search the catalog for. The Netflix
             API searches the title and synopses of catalog titles for a match.
         :param filter: The filter could be either the string `"instant"` or `"disc"`
+        :param expand: The expand parameter instructs the API to expand the ``expand``
+            (``@title, @box_art``, see ``EXPANDS``)  part of data and include that data inline in the element
         :param start_index:  (optional) The zero-based offset into the list that results
             from the query. By using this with the max_results parameter, user
         :param max_results: (optinoal) The maximum number of results to return. 
@@ -459,7 +477,9 @@ class NetflixAPI(object):
         data = {'term': term, 'output': 'json',
                      'start_index': start_index, 'max_results': max_results}
         if filter:
-            data['filter'] = NETFLIX_FILTER[filter]
+            data['filters'] = NETFLIX_FILTER[filter]
+        if expand and EXPANDS.index(expand):
+            data['expand'] = expand
         return self._request("get", url_path, data).json
 
     def get_catalog(self):
@@ -472,14 +492,16 @@ class NetflixAPI(object):
         r = self._request("get", url_path, headers={ 'Accept-Encoding': 'gzip'})
         return r.iter_content
 
-    def title_autocomplete(self, term, start_index=None, max_results=None):
+    def title_autocomplete(self, term, filter=None, start_index=None, max_results=None):
         """ Searches the catalog for  for movies and television series whose "short" 
         titles match a partial search text. You can then pass the title names that 
         Netflix API returns from this request to the title search methods in order 
         to conduct the actual title search. You can only autocomplete titles 
         (not other items, like names of actors).
 
+        :param term: The string to look for
         :param start_index:  (optional) The zero-based offset into the list that results from the query.
+        :param filter: The filter could be either the string `"instant"` or `"disc"`
         :param max_results: (optinoal) The maximum number of results to return. 
 
         :Returns:
@@ -489,15 +511,17 @@ class NetflixAPI(object):
         url_path = '/catalog/titles/autocomplete'
         data = {'term': term, 'output': 'json',
                      'start_index': start_index, 'max_results': max_results}
+
+        if filter:
+            data['filters'] = NETFLIX_FILTER[filter]
         return self._request("get", url_path, data).json
 
-    def get_title(self, url):
-        request_url = url
-        parameters = {'output': 'json'}
-        info = simplejson.loads( self.client._get_resource( 
-                                request_url, 
-                                parameters=parameters))
-        return info
+    def get_resource(self, url):
+        self._log(("get", url))
+        data = {'output': 'json'}
+
+        info = self._request('get', url, data=data)
+        return info.json
 
     def search_people(self, term,start_index=None,max_results=None):
         request_url = '/catalog/people'
@@ -548,7 +572,7 @@ class NetflixAPI(object):
             print "Caught exception [%s] while trying to log msg, \
                                   ignored: %s" % (sys.exc_info()[0], msg)
 
-    def _request(self, method, url_path, data={}, headers={}):
+    def _request(self, method, url, data={}, headers={}):
         """
         """
         if(self.api_version == 2.0):
@@ -558,7 +582,10 @@ class NetflixAPI(object):
         for k in data.keys():
             if data[k] is None:
                 del data[k]
-        url = "%s%s" % (BASE_URL, url_path)
+
+        if not url.startswith('http'):
+            url = "%s%s" % (BASE_URL, url)
+
         config = {}
         if self._logger:
             config['verbose'] = self._logger
@@ -611,6 +638,24 @@ class NetflixAPIV1(NetflixAPI):
         """
         return super(NetflixAPIV1, self).search_titles(term, start_index=start_index, max_results = max_results)
 
+    def title_autocomplete(self, term, start_index=None, max_results=None):
+        """ Searches the catalog for  for movies and television series whose "short" 
+        titles match a partial search text. You can then pass the title names that 
+        Netflix API returns from this request to the title search methods in order 
+        to conduct the actual title search. You can only autocomplete titles 
+        (not other items, like names of actors).
+
+        :param term: The string to look for
+        :param start_index:  (optional) The zero-based offset into the list that results from the query.
+        :param max_results: (optinoal) The maximum number of results to return. 
+
+        :Returns:
+             Returns a list of movie and television title names that match your partial search text. 
+        """
+        return super(NetflixAPIV1, self).title_autocomplete(term, start_index=start_index,
+                                                  max_results=max_results)
+
+
 class NetflixAPIV2(NetflixAPI):
     """ Provides functional interface to Netflix V2 REST api"""
 
@@ -631,13 +676,14 @@ class NetflixAPIV2(NetflixAPI):
             access_token_secret, logger)
         self.api_version = 2.0
 
-    def search_titles(self, term, filter=None, start_index=0, max_results=25):
+    def search_titles(self, term, filter=None, expand=None, start_index=0, max_results=25):
         """Use the catalog titles resource to search the netflix movie catalog(includes all medium)
         for titles of movies and television series. 
 
         :param term: The word or term to search the catalog for. The Netflix
             API searches the title and synopses of catalog titles for a match.
         :param filter: The filter could be either the string `"instant"` or `"disc"`
+        : TODO 
         :param start_index:  (optional) The zero-based offset into the list that results
             from the query. By using this with the max_results parameter, user
         :param max_results: (optinoal) The maximum number of results to return. 
@@ -648,7 +694,24 @@ class NetflixAPIV2(NetflixAPI):
             Returns the matching titles as a series of `catalog_title` records in relevance order, 
             and the total number of results in `results_per_page`.
         """
-        return super(NetflixAPIV2, self).search_titles(term, start_index=start_index,
+        return super(NetflixAPIV2, self).search_titles(term, filter=filter, expand=expand, start_index=start_index,
+                                                  max_results = max_results)
+
+    def title_autocomplete(self, term, filter=None, start_index=None, max_results=None):
+        """ Searches the catalog for  for movies and television series whose "short" 
+        titles match a partial search text. You can then pass the title names that 
+        Netflix API returns from this request to the title search methods in order 
+        to conduct the actual title search. You can only autocomplete titles 
+        (not other items, like names of actors).
+
+        :param start_index:  (optional) The zero-based offset into the list that results from the query.
+        :param filter: The filter could be either the string `"instant"` or `"disc"`
+        :param max_results: (optinoal) The maximum number of results to return. 
+
+        :Returns:
+             Returns a list of movie and television title names that match your partial search text. 
+        """
+        return super(NetflixAPIV2, self).title_autocomplete(term, filter=filter, start_index=start_index,
                                                   max_results = max_results)
 
 

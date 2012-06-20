@@ -10,14 +10,13 @@ import pprint
 __version__ = '0.13.0'
 
 def get_auth(netflix, appname, verbose):
-    (request_token, url) = netflix.get_request_token(use_OOB = True)
+    (request_token, requset_token_secret, url) = netflix.get_request_token(use_OOB = True)
     print "Go to %s, sign in and grant permission to netflix account to [%s]" % (url, appname)
 
-    pin = raw_input('Please enter Verifier Code:')
-    access_token = netflix.get_access_token(request_token, pin)
-    user = NetflixUser(access_token, netflix)
+    verification_code = raw_input('Please enter Verifier Code:')
+    (access_token, access_token_secret) = netflix.get_access_token(request_token, request_token_secret, verification_code)
     print "now put this key / secret in ~/.pyflix.cfg so you don't have to \
-                    re-authorize again:\n 'key': '%s',\n 'secret': '%s'\n" % (access_token.key, access_token.secret)
+                    re-authorize again:\n 'key': '%s',\n 'secret': '%s'\n" % (access_token, access_token_secret)
     
     return access_token
 
