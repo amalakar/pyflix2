@@ -13,7 +13,6 @@ import httplib
 import time
 from datetime import datetime
 from xml.dom.minidom import parseString
-import simplejson
 from urlparse import urlparse, parse_qs, parse_qsl, urlunparse
 import urllib
 
