@@ -16,6 +16,9 @@ Contents:
 
 .. autoclass:: Netflix.NetflixAPIV2
    :inherited-members:
+
+---------------------
+
 .. autoclass:: Netflix.NetflixAPIV1
    :inherited-members:
 

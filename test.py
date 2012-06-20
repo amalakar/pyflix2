@@ -40,8 +40,8 @@ class TestNetflixAPIV1(unittest.TestCase):
         # Following call downloads the whole catalog so it is bit of heavy-lifting
         # catalog = self.netflix.get_catalog()
 
-        #people = netflix_client.catalog.search_people('Flip Wilson', max_results=1)
-        #self.assertIsInstance(people, dict)
+        people = self.netflix.search_people('Flip Wilson', max_results=1)
+        self.assertIsNotNone(people['people']['number_of_results'])
 
 ##    # DISC TESTS
 #    def test_disc_functions(self):
@@ -98,7 +98,6 @@ class TestNetflixAPIV2(unittest.TestCase):
         # Test the filter capabilities, search with the same search term but with different filter
         # their total result should not match, showing the result set is different
         titles_instant = self.netflix2.search_titles('Matrix', max_results=25, filter="instant", expand="@box_art")
-        pprint.pprint(titles_instant)
         for title in titles_instant[u'catalog']:
             self.assertIsNotNone(title[u'box_art'])
             self.assertIsNotNone(title[u'id'])

@@ -523,33 +523,31 @@ class NetflixAPI(object):
         info = self._request('get', url, data=data)
         return info.json
 
-    def search_people(self, term,start_index=None,max_results=None):
-        request_url = '/catalog/people'
-        parameters = {'term': term, 'output': 'json'}
-        if start_index:
-            parameters['start_index'] = start_index
-        if max_results:
-            parameters['max_results'] = max_results
+    def get_title(self, id):
+        raise NotImplementedError
 
-        try:
-            info = simplejson.loads( self.client._get_resource( 
-                                    request_url,
-                                    parameters=parameters))
-        except:
-            return []
+    def get_similar(self, id):
+        raise NotImplementedError
 
-        return info['people']['person']
+    def search_people(self, term, start_index=None, max_results=None):
+        """search for people in the catalog by their name or a portion of their name.
 
-    def get_person(self,url):
-        request_url = url
-        parameters = {'output': 'json'}
-        try:
-            info = simplejson.loads( self.client._get_resource( 
-                                    request_url,
-                                    parameters=parameters))
-        except:
-            return {}
-        return info
+        :param term: The term in the person's name to search for in the catalog.
+        :param start_index:  (optional) The zero-based offset into the list that results from the query.
+        :param max_results: (optinoal) The maximum number of results to return. 
+        
+        :Retruns:
+            Returns results that include catalog title entries for titles that involve people that match 
+            the specified name. Results also include references to person details.
+        """
+
+        url_path = '/catalog/people'
+        data = {'term': term, 'output': 'json',
+                     'start_index': start_index, 'max_results': max_results}
+        return self._request("get", url_path, data).json
+
+    def get_person(self, url):
+        raise NotImplementedError
 
 
     @staticmethod
