@@ -16,11 +16,18 @@ Contents:
 
 .. autoclass:: Netflix.NetflixAPIV2
    :inherited-members:
+   :members:
+   :undoc-members:
+
+   .. automethod:: __init__
+
 
 ---------------------
 
 .. autoclass:: Netflix.NetflixAPIV1
    :inherited-members:
+   :members:
+   :undoc-members:
 
 
 Indices and tables

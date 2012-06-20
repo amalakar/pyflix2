@@ -681,7 +681,8 @@ class NetflixAPIV2(NetflixAPI):
         :param term: The word or term to search the catalog for. The Netflix
             API searches the title and synopses of catalog titles for a match.
         :param filter: The filter could be either the string `"instant"` or `"disc"`
-        : TODO 
+        :param expand: The expand parameter instructs the API to expand the ``expand``
+            (``@title, @box_art``, see ``EXPANDS``)  part of data and include that data inline in the element
         :param start_index:  (optional) The zero-based offset into the list that results
             from the query. By using this with the max_results parameter, user
         :param max_results: (optinoal) The maximum number of results to return. 
