@@ -3,14 +3,11 @@
 
 import sys
 import os.path
-import re
 import requests
 from oauth_hook import OAuthHook
 import pprint
-import httplib
 import time
 from datetime import datetime
-from xml.dom.minidom import parseString
 from urlparse import urlparse, parse_qs, parse_qsl, urlunparse
 import urllib
 
@@ -31,6 +28,10 @@ EXPANDS = ["@title", "@box_art", "@synopsis", "@short_synopsis", "@format_availa
 
 class NetflixError(Exception):
     pass
+
+class NetflixAuthRequiredError(Exception):
+    """Exception thrown when the netflix client is not provided ``access_token`` and ``access_token_secret`` but
+    a protcted call is made"""
 
 
 class OAuthToken(object):
@@ -306,40 +307,11 @@ class NetflixUserQueue:
         response = self.client._delete_resource( entry_iD, token=access_token )
         return response
 
-
-class NetflixDisc:
-
-    def __init__(self,disc_info,client):
-        self.info = disc_info
-        self.client = client
-
-    def get_info(self,field):
-        fields = []
-        url = ''
-        for link in self.info['link']:
-            fields.append(link['title'])
-            if link['title'] == field:
-                url = link['href']
-        if not url:
-            error_string =          "Invalid or missing field.  " + \
-                                    "Acceptable fields for this object are:" + \
-                                    "\n\n".join(fields)
-            print error_string
-            sys.exit(1)
-        parameters = {'output': 'json'}
-        try:
-            info = simplejson.loads(self.client._get_resource( 
-                                    url,
-                                    parameters=parameters))
-        except:
-            return []
-        else:
-            return info
-
 class _NetflixAPI(object):
-    """ Abstract Class for NetflixAPI """
+    """ Abstract Class for the common api of Netflix V1.0 and V2.0"""
+
     _user_credential_set = False
-    api_version = 2.0
+    _api_version = 2.0
 
     def __init__(self, appname, consumer_key, consumer_secret, access_token=None,
             access_token_secret=None, logger=None):
@@ -356,7 +328,7 @@ class _NetflixAPI(object):
         """
 
         # Abstractify this class
-        if self.__class__ is NetflixAPI:
+        if self.__class__ is _NetflixAPI:
             raise NotImplementedError
 
         if not appname:
@@ -393,6 +365,7 @@ class _NetflixAPI(object):
         oauth_hook = OAuthHook(access_token, access_token_secret)
         self._client = requests.session(hooks={'pre_request': oauth_hook})
         self._user_credential_set = True
+        self._access_token = access_token
 
     def get_request_token(self, use_OOB = True):
         """Obtains the request token/secret and the authentication URL
@@ -433,7 +406,7 @@ class _NetflixAPI(object):
         """Obtains the access token/secret, given:
 
             - The ``request_token`` and ``request_token_secret`` has been authorized  by visiting the netflix authorization URL by user
-            - The user has obtained the verification code (when ``use_OOB`` was set in ``get_request_token`` from netflix website
+            - The user has obtained the verification code (when ``use_OOB`` was set in ``get_request_token`` from netflix website)
 
         :param request_token: The request token obtained using :meth: get_request_token 
         :param request_token_secret: The request token secret obtained using :py:meth:`~NetflixAPI.get_request_token`
@@ -512,7 +485,7 @@ class _NetflixAPI(object):
         """
 
         url_path = '/catalog/titles/autocomplete'
-        data = {'term': term, 'output': 'json',
+        data = {'term': term,
                      'start_index': start_index, 'max_results': max_results}
 
         if filter:
@@ -526,11 +499,25 @@ class _NetflixAPI(object):
         info = self._request('get', url, data=data)
         return info.json
 
-    def get_title(self, id):
-        raise NotImplementedError
+    def get_title(self, id,  category=None):
+        """ Retrieve details for specific catalog title
 
-    def get_similar(self, id):
-        raise NotImplementedError
+        :param id: This is the id that is returned for movies in ``search_movie`` call (id looks like
+            ``http://api.netflix.com/catalog/titles/movies/60000870``)
+        :param category: The expand parameter instructs the API to get (``"title", "box_art"``, 
+            see :py:data:`EXPANDS` without the `@` though)  information of the movie
+
+        :returns: 
+            The detail of the movie **OR** (award/category..) etc of the movie as mentioned by category
+        """
+
+        if 'http' in id:
+            url=id
+            if category and EXPANDS.index("@" + category):
+                url = "%s/%s" % (url, category)
+            return self._request('get', url).json
+        else:
+            raise NetflixError("The id should be like: http://api.netflix.com/catalog/people/185930")
 
     def search_people(self, term, start_index=None, max_results=None):
         """search for people in the catalog by their name or a portion of their name.
@@ -545,16 +532,54 @@ class _NetflixAPI(object):
         """
 
         url_path = '/catalog/people'
-        data = {'term': term, 'output': 'json',
+        data = {'term': term,
                      'start_index': start_index, 'max_results': max_results}
         return self._request("get", url_path, data).json
 
-    def get_person(self, url):
-        raise NotImplementedError
+    def get_person(self, id):
+        """ You can retrieve detailed information about a person in the Catalog, using that person's ID,
+        that includes a biography, featured titles, and a complete list of titles
+
+        :param id: This is the id that is returned for the person in ``search_people`` call (id looks like
+            ``http://api.netflix.com/catalog/people/185930``
+
+        :returns: The dict object containng details of the person
+
+        """
+        if 'http' in id:
+            url=id
+            return self.get_resource(url)
+        else:
+            raise NetflixError("The id should be like: http://api.netflix.com/catalog/people/185930")
+
+
+    def get_user(self, id=None):
+        """ Retrieves subscriber infomation
+
+        :param id: Retrieves information about the user whose ``id`` is given. If ``id`` is not given
+            the current user's infomation is retrieved
+
+        :returns: ``dict`` object containg user information. The return object is different for `v1` and `v2`
+        """
+
+        self._assert_authorized()
+        if not id:
+            id = self._access_token
+        url_path = '/users/' + id
+        return self._request('get', url_path).json
+
+    def get_user_details(self, subtype, id=None):
+        self._assert_authorized()
+        url_path = '/users/' + self._access_token + "/" + subtype
+        return self._request('get', url_path).json
+
+    def _assert_authorized(self):
+        if not self._user_credential_set:
+            raise NetflixAuthRequiredError("User is not authorized")
 
     @staticmethod
-    def get_id(url):
-        """ This method can find the id from an netflix URL"""
+    def get_integer_id(url):
+        """ This method can find the id and the type of resource from a netflix URL"""
         raise NotImplementedError
 
     @staticmethod
@@ -588,8 +613,11 @@ class _NetflixAPI(object):
     def _request(self, method, url, data={}, headers={}):
         """
         """
-        if(self.api_version == 2.0):
-            data['v'] = 2.0 
+        if(self._api_version == 2.0):
+            data['v'] = 2.0
+
+        if not data or 'output' not in data:
+            data['output'] = 'json'
 
         # Remove parameters with value None
         for k in data.keys():
@@ -634,7 +662,7 @@ class NetflixAPIV1(_NetflixAPI):
         """
         super(NetflixAPIV1, self).__init__(appname, consumer_key, consumer_secret, access_token,
             access_token_secret, logger)
-        self.api_version = 1.0
+        self._api_version = 1.0
 
     def search_titles(self, term, start_index=0, max_results=25):
         """Use the catalog titles resource to search the netflix movie catalog(includes all medium)
@@ -693,7 +721,7 @@ class NetflixAPIV2(_NetflixAPI):
         """
         super(NetflixAPIV2, self).__init__(appname, consumer_key, consumer_secret, access_token,
             access_token_secret, logger)
-        self.api_version = 2.0
+        self._api_version = 2.0
 
     def search_titles(self, term, filter=None, expand=None, start_index=0, max_results=25):
         """Use the catalog titles resource to search the netflix movie catalog(includes all medium)

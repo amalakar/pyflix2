@@ -4,8 +4,11 @@ Welcome to pyflix2's documentation!
 API:
 ---------
 
-.. toctree::
-   :maxdepth: 2
+.. autosummary::
+    .. toctree::
+
+    Netflix.NetflixAPIV1
+    Netflix.NetflixAPIV2
 
 .. automodule:: Netflix
     :members:

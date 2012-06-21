@@ -1,11 +1,13 @@
 # Sample code to use the Netflix python client
 import unittest, os
 import simplejson
-import pprint
+from pprint import pprint
 from Netflix import *
 import ConfigParser
 
 MOVIE_TITLE = "Foo Fighters"
+
+DUMP_OBJECTS = True
 
 class TestNetflixAPIV1(unittest.TestCase):
 
@@ -17,8 +19,8 @@ class TestNetflixAPIV1(unittest.TestCase):
                                    consumer_key=config('consumer_key'),
                                    consumer_secret=config('consumer_secret'), 
                                    access_token=config('access_token'),
-                                   access_token_secret=config('access_token_secret'),
-                                   logger=sys.stderr)
+                                   access_token_secret=config('access_token_secret'))
+                                   #logger=sys.stderr)
 
     def test_token_functions(self):
         pass
@@ -31,6 +33,7 @@ class TestNetflixAPIV1(unittest.TestCase):
         for title in titles[u'catalog_titles'][u'catalog_title']:
             self.assertIsNotNone(title[u'title'][u'regular'])
             self.assertIsNotNone(title[u'id'])
+            print title['id']
         self.assertEqual(len(titles['catalog_titles'][u'catalog_title']), 2) 
 
         autocomplete_titles = self.netflix.title_autocomplete("matrix")
@@ -40,9 +43,19 @@ class TestNetflixAPIV1(unittest.TestCase):
         # Following call downloads the whole catalog so it is bit of heavy-lifting
         # catalog = self.netflix.get_catalog()
 
-        people = self.netflix.search_people('Flip Wilson', max_results=1)
-        self.assertIsNotNone(people['people']['number_of_results'])
+        people = self.netflix.search_people('Flip Wilson', max_results=5)
+        self.assertIsNotNone(people['people'])
+        person = self.netflix.get_person(people['people']['person'][0]['id'])
+        self.assertIsNotNone(person)
 
+    def test_user_functions(self):
+        user = self.netflix.get_user()
+        self.assertIsNotNone(user)
+        dump_object(user)
+        user_f = self.netflix.get_user_details("feed")
+        dump_object(user_f)
+        user_s = self.netflix.get_user_details("feed")
+        dump_object(user_s)
 ##    # DISC TESTS
 #    def test_disc_functions(self):
 #        return  
@@ -62,7 +75,7 @@ class TestNetflixAPIV1(unittest.TestCase):
 #        data = netflix_client.catalog.search_titles('Cocoon',1,2)
 #        ratings = netflix_user.getRatings(data)
 #        history = netflix_user.get_rental_history('shipped',updated_min=1219775019,max_results=4)
-#        pprint.pprint(history)
+#        pprint(history)
 #        self.assertTrue(int(history['rental_history']['number_of_results']) <= 5)
 #
 #        queue = NetflixUserQueue(netflix_user)
@@ -103,7 +116,13 @@ class TestNetflixAPIV2(unittest.TestCase):
             self.assertIsNotNone(title[u'id'])
         self.assertEqual(int(titles_instant['results_per_page']), 25)
 
-        movie = self.netflix2.get_resource(titles_instant['catalog'][0]['id'])
+        m = self.netflix2.get_title(titles_instant['catalog'][0]['id'])
+        self.assertIsNotNone(m)
+        #dump_object(m)
+        print "--------------"
+        m = self.netflix2.get_title(titles_instant['catalog'][0]['id'], "languages_and_audio")
+        self.assertIsNotNone(m)
+        #dump_object(m)
 
         titles_disc = self.netflix2.search_titles('Matrix', filter="disc")
         self.assertNotEqual(titles_instant['number_of_results'], titles_disc['number_of_results'])
@@ -118,9 +137,15 @@ class TestNetflixAPIV2(unittest.TestCase):
         if autocomplete_titles_disc['autocomplete']:
             disc_count = len(autocomplete_titles_disc['autocomplete']['title'])
         self.assertNotEqual(instant_count, disc_count)
-#        for title in autocomplete_titles[u'autocomplete'][u'autocomplete_item']:
-#            self.assertIn('matrix', title['title']['short'].lower())
-#
+
+    def test_user_functions(self):
+        user = self.netflix2.get_user()
+        self.assertIsNotNone(user)
+        dump_object(user)
+
+def dump_object(obj):
+    if DUMP_OBJECTS:
+        pprint.pprint(obj)
 
 if __name__ == '__main__':
     unittest.main()
