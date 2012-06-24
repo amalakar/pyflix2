@@ -31,4 +31,16 @@ API:
 
    .. automethod:: __init__
 
+---------------------
+
+.. autoclass:: Netflix.User
+   :inherited-members:
+   :members:
+   :undoc-members:
+
+   .. automethod:: __init__
+
+
+---------------------
+
 .. autoexception:: Netflix.NetflixError
