@@ -10,6 +10,7 @@ import time
 from datetime import datetime
 from urlparse import urlparse, parse_qs, parse_qsl, urlunparse
 import urllib
+import json
 
 __version__ = "0.1.1"
 
@@ -24,306 +25,28 @@ EXPANDS = ["@title", "@box_art", "@synopsis", "@short_synopsis", "@format_availa
           "@seasons", "@episodes", "@discs"]
 """ Allowed expand strings while calling the titles api"""
 
+SORT_ORDER = ["queue_sequence", "date_added", "alphabetical"]
+""" Allowed sort order while retrieveing queues"""
+
 
 
 class NetflixError(Exception):
+    """ Error thrown if the netflix api throws http error"""
     pass
 
-class NetflixAuthRequiredError(Exception):
-    """Exception thrown when the netflix client is not provided ``access_token`` and ``access_token_secret`` but
-    a protcted call is made"""
-
-
-class OAuthToken(object):
-    def __init__(self, key, secret):
-        self.key, self.secret = key, secret
-
-
-class NetflixUser():
-
-    def get_data(self):
-        access_token=self.access_token
-
-        if not isinstance(access_token, oauth.o_auth_token):
-            access_token = oauth.OAuthToken( 
-                                    access_token['key'], 
-                                    access_token['secret'] )
-
-        request_url = '/users/%s' % (access_token.key)
-        parameters = { 'output': 'json' }
-
-        info = simplejson.loads( self.client._get_resource( 
-                                    request_url,
-                                    parameters = parameters,
-                                     token=access_token ) )
-        self.data = info['user']
-        return self.data
-
-    def get_info(self, field):
-        access_token = self.access_token
-
-        if not self.data:
-            self.get_data()
-
-        fields = []
-        url = ''
-        parameters = { 'output': 'json' }
-        for link in self.data['link']:
-            fields.append(link['title'])
-            if link['title'] == field:
-                url = link['href']
-
-        if not url:
-            error_string =           "Invalid or missing field.  " + \
-                                    "Acceptable fields for this object are:"+ \
-                                    "\n\n".join(fields)
-            print error_string
-            sys.exit(1)
-        try:
-            info = simplejson.loads(self.client._get_resource( 
-                                    url,
-                                    parameters = parameters,
-                                    token=access_token ))
-        except:
-            return []
-        else:
-            return info
-
-    def get_ratings(self, disc_info=[], urls=[]):
-        access_token=self.access_token
-
-        if not isinstance(access_token, oauth.OAuthToken):
-            access_token = oauth.OAuthToken( 
-                                    access_token['key'], 
-                                    access_token['secret'] )
-
-        request_url = '/users/%s/ratings/title' % (access_token.key)
-        if not urls:
-            if isinstance(disc_info,list):
-                for disc in disc_info:
-                    urls.append(disc['id'])
-            else:
-                urls.append(disc_info['id'])
-        parameters = { 'title_refs': ','.join(urls), 'output': 'json' }
-
-        info = simplejson.loads( self.client._get_resource( 
-                                    request_url, 
-                                    parameters=parameters, 
-                                    token=access_token ) )
-
-        ret = {}
-        for title in info['ratings']['ratings_item']:
-                ratings = {
-                        'average': title['average_rating'],
-                        'predicted': title['predicted_rating'],
-                }
-                try:
-                    ratings['user'] = title['user_rating']
-                except:
-                    pass
-
-                ret[ title['title']['regular'] ] = ratings
-
-        return ret
-
-    def get_rental_history(self,history_type=None,start_index=None,
-                                    max_results=None,updated_min=None):
-        access_token=self.access_token
-        parameters = {}
-        if start_index:
-            parameters['start_index'] = start_index
-        if max_results:
-            parameters['max_results'] = max_results
-        if updated_min:
-            parameters['updated_min'] = updated_min
-
-        if not isinstance(access_token, oauth.OAuthToken):
-            access_token = oauth.OAuthToken( 
-                                    access_token['key'],
-                                    access_token['secret'] )
-
-        if not history_type:
-            request_url = '/users/%s/rental_history' % (access_token.key)
-        else:
-            request_url = '/users/%s/rental_history/%s' % (access_token.key,history_type)
-
-        try:
-            info = simplejson.loads( self.client._get_resource( 
-                                    request_url,
-                                    parameters=parameters,
-                                    token=access_token ) )
-        except:
-            return {}
-
-        return info
-
-
-class NetflixUserQueue:
-
-    def __init__(self,user):
-        self.user = user
-        self.client = user.client
-        self.tag = None
-
-    def get_contents(self, sort=None, start_index=None, 
-                                    max_results=None, updated_min=None):
-        parameters={'output': 'json'}
-        if start_index:
-            parameters['start_index'] = start_index
-        if max_results:
-            parameters['max_results'] = max_results
-        if updated_min:
-            parameters['updated_min'] = updated_min
-        if sort and sort in ('queue_sequence','date_added','alphabetical'):
-            parameters['sort'] = sort
-
-        request_url = '/users/%s/queues' % (self.user.access_token.key)
-        try:
-            info = simplejson.loads(self.client._get_resource( 
-                                    request_url,
-                                    parameters=parameters,
-                                    token=self.user.access_token ))
-        except:
-            return []
-        else:
-            return info
-
-    def get_available(self, sort=None, start_index=None, 
-                                    max_results=None, updated_min=None,
-                                    queue_type='disc'):
-        parameters={'output': 'json'}
-        if start_index:
-            parameters['start_index'] = start_index
-        if max_results:
-            parameters['max_results'] = max_results
-        if updated_min:
-            parameters['updated_min'] = updated_min
-        if sort and sort in ('queue_sequence','date_added','alphabetical'):
-            parameters['sort'] = sort
-
-        request_url = '/users/%s/queues/%s/available' % (
-                                    self.user.access_token.key,
-                                    queue_type)
-        try:
-            info = simplejson.loads(self.client._get_resource( 
-                                    request_url,
-                                    parameters=parameters,
-                                    token=self.user.access_token ))
-        except:
-            return []
-        else:
-            return info
-
-    def get_saved(self, sort=None, start_index=None, 
-                                    max_results=None, updated_min=None,
-                                    queue_type='disc'):
-        parameters={'output': 'json'}
-        if start_index:
-            parameters['start_index'] = start_index
-        if max_results:
-            parameters['max_results'] = max_results
-        if updated_min:
-            parameters['updated_min'] = updated_min
-        if sort and sort in ('queue_sequence','date_added','alphabetical'):
-            parameters['sort'] = sort
-
-        request_url = '/users/%s/queues/%s/saved' % (
-                                    self.user.access_token.key,
-                                    queue_type)
-        try:
-            info = simplejson.loads(self.client._get_resource( 
-                                    request_url,
-                                    parameters=parameters,
-                                    token=self.user.access_token ))
-        except:
-            return []
-        else:
-            return info
-
-    def add_title(self, disc_info=[], urls=[],queue_type='disc',position=None):
-        access_token=self.user.access_token
-        parameters={}
-        if position:
-            parameters['position'] = position
-
-        if not isinstance(access_token, oauth.OAuthToken):
-            access_token = oauth.OAuthToken( 
-                                    accessToken['key'],
-                                    accessToken['secret'] )
-
-        request_url = '/users/%s/queues/disc' % (access_token.key)
-        if not urls:
-            for disc in disc_info:
-                urls.append( disc['id'] )
-        parameters['title_ref'] = ','.join(urls)
-
-        if not self.tag:
-            params = {'output': 'json'}
-            response = self.client._get_resource(
-                                    request_url,
-                                    parameters = params,
-                                    token=access_token )
-            response = simplejson.loads(response)
-            self.tag = response["queue"]["etag"]
-        parameters['etag'] = self.tag
-        response = self.client._post_resource( 
-                                    request_url, 
-                                    token=access_token,
-                                    parameters=parameters )
-        return response
-
-    def remove_title(self, id, queue_type='disc'):
-        access_token=self.user.access_token
-        entry_iD = None
-        parameters={'output': 'json'}
-        if not isinstance(access_token, oauth.OAuthToken):
-            access_token = oauth.OAuthToken(
-                                    access_token['key'],
-                                    access_token['secret'] )
-
-        # First, we gotta find the entry to delete
-        queueparams = {'max_results': 500, 'output': 'json'}
-        request_url = '/users/%s/queues/disc' % (access_token.key)
-        response = self.client._get_resource( 
-                                    request_url,
-                                    token=access_token,
-                                    parameters=queueparams )
-        print "Response is " + response
-        response = simplejson.loads(response)
-        titles = response["queue"]["queue_item"]
-
-        for disc in titles:
-            disc_iD = os.path.basename(urlparse(disc['id']).path)
-            if disc_iD == id:
-                entry_iD = disc['id']
-
-        if not entry_iD:
-            return
-        first_response = self.client._get_resource( 
-                                    entry_iD,
-                                    token=access_token,
-                                    parameters=parameters )
-
-        response = self.client._delete_resource( entry_iD, token=access_token )
-        return response
 
 class _NetflixAPI(object):
     """ Abstract Class for the common api of Netflix V1.0 and V2.0"""
 
-    _user_credential_set = False
     _api_version = 2.0
 
-    def __init__(self, appname, consumer_key, consumer_secret, access_token=None,
-            access_token_secret=None, logger=None):
+    def __init__(self, appname, consumer_key, consumer_secret, logger=None):
         """ **Abstract class** contains all the common functionality of netflix v1 and v2 REST api
 
         :param appname: The Application name as registered in Netflix Developer 
             website <http://developer.netflix.com/apps/mykeys>
         :param consumer_key: The consumer key as registered in Netlflix Developer website
         :param consumer_secret: The consumer secret as registerde in Netflix Developer website
-        :param access_token: (Optional) User access token obtained using OAuth three legged authentication 
-        :param access_token_secret: (Optional) User access token  secret obtained using OAuth 
-            three legged authentication 
         :param logger: (Optional) The stream object to write log to. Nothing is logged if `logger` is `None`
         """
 
@@ -345,27 +68,10 @@ class _NetflixAPI(object):
         OAuthHook.consumer_secret = consumer_secret
         self._logger = logger
 
-        self._user_credential_set = False
-        if access_token and access_token_secret:
-            self.set_user_credential(access_token, access_token_secret)
-        else:
-            oauth_hook = OAuthHook()
-            self._client = requests.session(hooks={'pre_request': oauth_hook})
-
-
-    def set_user_credential(self, access_token, access_token_secret):
-        """ Sets the user access token and secret for future calls
-        Must be set for calls that require a user to be authenticated"""
-
-        if not access_token:
-            raise NetflixError("access_token cannot be null/empty")
-        if not access_token_secret:
-            raise NetflixError("access_token_secret cannot be null/empty")
-
-        oauth_hook = OAuthHook(access_token, access_token_secret)
+        oauth_hook = OAuthHook()
         self._client = requests.session(hooks={'pre_request': oauth_hook})
-        self._user_credential_set = True
-        self._access_token = access_token
+
+
 
     def get_request_token(self, use_OOB = True):
         """Obtains the request token/secret and the authentication URL
@@ -400,7 +106,7 @@ class _NetflixAPI(object):
         params = {'application_name': self._consumer_name,
                     'oauth_consumer_key': self._consumer_key}
         auth_url = self._append_param(response['login_url'][0], params)
-        return (OAuthToken(request_token, request_secret), auth_url )
+        return (request_token, request_secret, auth_url )
 
     def get_access_token(self, request_token, request_token_secret, oauth_verification_code = None):
         """Obtains the access token/secret, given:
@@ -553,25 +259,17 @@ class _NetflixAPI(object):
             raise NetflixError("The id should be like: http://api.netflix.com/catalog/people/185930")
 
 
-    def get_user(self, id=None):
-        """ Retrieves subscriber infomation
+    def get_user(self, user_token, user_token_secret):
+        """ Returns the user object, which could then be used to make further user specific calls 
 
         :param id: Retrieves information about the user whose ``id`` is given. If ``id`` is not given
             the current user's infomation is retrieved
 
         :returns: ``dict`` object containg user information. The return object is different for `v1` and `v2`
         """
+        user = User(self, user_token, user_token_secret)
+        return user
 
-        self._assert_authorized()
-        if not id:
-            id = self._access_token
-        url_path = '/users/' + id
-        return self._request('get', url_path).json
-
-    def get_user_details(self, subtype, id=None):
-        self._assert_authorized()
-        url_path = '/users/' + self._access_token + "/" + subtype
-        return self._request('get', url_path).json
 
     def _assert_authorized(self):
         if not self._user_credential_set:
@@ -610,7 +308,7 @@ class _NetflixAPI(object):
             print "Caught exception [%s] while trying to log msg, \
                                   ignored: %s" % (sys.exc_info()[0], msg)
 
-    def _request(self, method, url, data={}, headers={}):
+    def _request(self, method, url, data={}, headers={}, client=None):
         """
         """
         if(self._api_version == 2.0):
@@ -630,22 +328,27 @@ class _NetflixAPI(object):
         config = {}
         if self._logger:
             config['verbose'] = self._logger
-        r = self._client.request(method, url, data=data, config=config, headers=headers)
+
+        if not client:
+            client = self._client
+
+        r = client.request(method, url, data=data, config=config, headers=headers)
         self._log((r.request.method, r.url, r.status_code))
         if(r.status_code < 200 or r.status_code >= 300):
+            error = {}
+            try:
+                error = json.loads(r.content or r.text)
+            except:
+                self._log("Couldn't jsonify error response: %s" % (r.content or r.text))
             raise NetflixError("Error fetching url: {0}. Code: {1}. Error: {2} "
-                    .format(r.url, r.status_code, r.content))
+                    .format(r.url, r.status_code, r.content), error)
         return r
-
-    def __str__(self):
-        return self.attributes()  
 
 
 class NetflixAPIV1(_NetflixAPI):
     """ Provides functional interface to Netflix V1 REST api"""
 
-    def __init__(self, appname, consumer_key, consumer_secret, access_token=None,
-            access_token_secret=None, logger=None):
+    def __init__(self, appname, consumer_key, consumer_secret, logger=None):
         """ The main class for accessing the Netflix REST API v1.0 http://developer.netflix.com/docs/REST_API_Reference
         It provides all the methods needed to access the resources exposed by netflix. Netflix has now released version 2.0
         http://developer.netflix.com/page/Netflix_API_20_Release_Notes which is backward incompatible. So going forward netflix
@@ -655,13 +358,10 @@ class NetflixAPIV1(_NetflixAPI):
             website <http://developer.netflix.com/apps/mykeys>
         :param consumer_key: The consumer key as registered in Netlflix Developer website
         :param consumer_secret: The consumer secret as registered in Netflix Developer website
-        :param access_token: (Optional) User access token obtained using OAuth three legged authentication 
-        :param access_token_secret: (Optional) User access token  secret obtained using OAuth 
             three legged authentication 
         :param logger: (Optional) The stream object to write log to. Nothing is logged if `logger` is `None`
         """
-        super(NetflixAPIV1, self).__init__(appname, consumer_key, consumer_secret, access_token,
-            access_token_secret, logger)
+        super(NetflixAPIV1, self).__init__(appname, consumer_key, consumer_secret, logger)
         self._api_version = 1.0
 
     def search_titles(self, term, start_index=0, max_results=25):
@@ -703,8 +403,7 @@ class NetflixAPIV1(_NetflixAPI):
 class NetflixAPIV2(_NetflixAPI):
     """ Provides functional interface to Netflix V2 REST api"""
 
-    def __init__(self, appname, consumer_key, consumer_secret, access_token=None,
-            access_token_secret=None, logger=None):
+    def __init__(self, appname, consumer_key, consumer_secret, access_token=None, logger=None):
         """ The main class for accessing the Netflix REST API v2.0 http://developer.netflix.com/page/Netflix_API_20_Release_Notes
         It provides all the methods needed to access the resources exposed by netflix. The version 2.0 of the API 
         is backward incompitable. So going forward netflix may *deprectate* the version 1.0 APIs. So it is 
@@ -714,13 +413,9 @@ class NetflixAPIV2(_NetflixAPI):
             website <http://developer.netflix.com/apps/mykeys>
         :param consumer_key: The consumer key as registered in Netlflix Developer website
         :param consumer_secret: The consumer secret as registerde in Netflix Developer website
-        :param access_token: (Optional) User access token obtained using OAuth three legged authentication 
-        :param access_token_secret: (Optional) User access token  secret obtained using OAuth 
-            three legged authentication 
         :param logger: (Optional) The stream object to write log to. Nothing is logged if `logger` is `None`
         """
-        super(NetflixAPIV2, self).__init__(appname, consumer_key, consumer_secret, access_token,
-            access_token_secret, logger)
+        super(NetflixAPIV2, self).__init__(appname, consumer_key, consumer_secret, logger)
         self._api_version = 2.0
 
     def search_titles(self, term, filter=None, expand=None, start_index=0, max_results=25):
@@ -764,4 +459,175 @@ class NetflixAPIV2(_NetflixAPI):
                                                   max_results = max_results)
 
 
+class User:
+    def __init__(self, netflix_client, access_token, access_token_secret, id=None):
+        """"
+        :param access_token: (Optional) User access token obtained using OAuth three legged authentication 
+        :param access_token_secret: (Optional) User access token  secret obtained using OAuth 
+            three legged authentication 
+        """
+        """ Sets the user access token and secret for future calls
+        Must be set for calls that require a user to be authenticated"""
+
+        if not access_token:
+            raise NetflixError("access_token cannot be null/empty")
+        if not access_token_secret:
+            raise NetflixError("access_token_secret cannot be null/empty")
+
+        oauth_hook = OAuthHook(access_token, access_token_secret)
+        self._netflix_client = netflix_client
+        self._client = requests.session(hooks={'pre_request': oauth_hook})
+        self._access_token = access_token
+        if not id:
+            user = self._request('get', "/users/current").json
+            if 'resource' in user:
+                url = user['resource']['link']['href']
+            elif 'http://schemas.netflix.com/user.current' in user:
+                url = user['http://schemas.netflix.com/user.current']
+            id = url.split('/')[-1]
+        self.id = id
+
+    def get_details(self):
+        """Returns information about the subscriber with the specified user ID"""
+        url_path = '/users/' + self.id
+        return self._request('get', url_path ).json
+
+    def get_feeds(self):
+        """Netflix API returns a list of URLs of all feeds available for the specified user."""
+
+        url_path = '/users/' + self.id + "/feeds"
+        return self._request('get', url_path).json
+
+    def get_title_states(self, title_refs=None):
+        """returns a series of records that indicate the relationship between the subscriber and one or more titles."""
+        data = {}
+        if title_refs:
+            data = {"title_refs" : ",".join(title_refs)}
+        url_path = '/users/' + self.id + "/feeds"
+        return self._request('get', url_path, data=data).json
+
+    def get_queues(self, sort_order=None, start_index=None, 
+                   max_results=None, updated_min=None):
+        """Returns the contents of a subscriber's instant-watch queue."""
+        return self._request_queue("get", '/users/' + self.id + "/queues", 
+                          sort_order, start_index, max_results, updated_min)
+
+
+    def get_queues_instant(self, sort_order=None, start_index=None, 
+                   max_results=None, updated_min=None):
+        """Returns details about a subscriber's instant watch queue"""
+        return self._request_queue("get", '/users/' + self.id + "/queues/instant",
+                          sort_order, start_index, max_results, updated_min)
+
+    def get_queues_disc(self, sort_order=None, start_index=None, 
+                   max_results=None, updated_min=None):
+        """Returns details about a subscriber's disc queue"""
+        return self._request_queue("get", '/users/' + self.id + "/queues/disc",
+                          sort_order, start_index, max_results, updated_min)
+
+    def add_queue_instant(self, title_ref, position, etag):
+        """These resources automatically add the title to the saved or available queue, 
+        depending on the title's availability. Use :py:meth:`~User.get_title_states`
+        to see the status of the movie in your queue
+
+        :param title_ref: The catalog title to be added to the queue.
+        :param position: The position (positions start with "1") in the queue at which to 
+            insert or move the title.
+        :param etag: The queue's ETag value that Netflix API returned the last time you 
+            accessed the queue. Use this for concurrency control.
+
+        :returns: If your request is successful, Netflix API returns the queue entries that got
+        created or modified with your POST request. If this request involved moving a title within 
+        a queue, the API returns only that queue item with its updated position. The API throws an error 
+        if a title is not available. The POST operation fails if the queue has been updated since the time 
+        you retrieved the ETag value that you passed in. Each successful (or partially successful) POST 
+        response includes a new ETag value that you can then use in subsequent requests.
+        """
+        data = {'title_ref': title_ref, 'position': position, 'etag': etag}
+        return self._request_queue("post", '/users/%s/queues/instant' % self.id,
+                          sort_order, start_index, max_results, updated_min)
+
+    def get_queues_instant_available(self, entry_id=None, sort_order=None, 
+                                    start_index=None, max_results=None, updated_min=None):
+        """Retrieves details about the entry from the subscriber's instant-watch queue"""
+
+        queue_path = '/users/%s/queues/instant/available' % self.id
+        if entry_id:
+            queue_path += '/' + entry_id
+        return self._request_queue("get", queue_path,
+                sort_order, start_index, max_results, updated_min)
+
+    def delete_queues_instant_available(self, entry_id):
+        queue_path = '/users/%s/queues/instant/available/%s' %  (self.id, entry_id)
+        return self._request_queue('delete', queue_path)
+
+    def get_queues_instant_saved(self, entry_id=None, sort_order=None, 
+                                    start_index=None, max_results=None, updated_min=None):
+        """Returns the saved status of an entry in a subscriber's instant-watch queue."""
+
+        queue_path = '/users/%s/queues/instant/saved' % self.id
+        if entry_id:
+            queue_path += '/' + entry_id
+        return self._request_queue("get", queue_path,
+                sort_order, start_index, max_results, updated_min)
+
+    def delete_queue_instant_saved(self, entry_id):
+        queue_path = '/users/%s/queues/instant/saved/%s' %  (self.id, entry_id)
+        return self._request_queue('delete', queue_path)
+
+    def _request_queue(self, method, queue_path, sort_order=None, start_index=None, 
+                   max_results=None, updated_min=None):
+        data = {'start_index' : start_index, "max_results": max_results, "updated_min": updated_min}
+        if sort_order and SORT_ORDER.index(sort_order):
+            data['sort'] = sort_order
+        return self._request(method, queue_path, data=data).json
+
+    def get_rental_history(self, type=None, start_index=None, max_results=None, updated_min=None):
+        url_path = '/users/' + self.id + '/rental_history'
+        if type:
+            url_path += '/watched'
+        return self._request('get', url_path).json
+
+
+    def get_rating(self, title_refs):
+        """Returns a list of movie or television series ratings for the designated subscriber. 
+        If available, the subscriber's actual ratings are returned; otherwise, the resource 
+        returns the Netflix-predicted ratings.
+
+        :param title_refs: List of title ids
+        :returns: List of rating of given titles 
+        """
+        return self._request_ratings('get', '/users/%s/ratings/title' % self.id, title_refs)
+
+    def get_actual_rating(self, title_refs):
+        return self._request_ratings('get', '/users/%s/ratings/title/actual' % self.id, title_refs)
+
+    def add_my_rating(self, title_ref, rating):
+        data = {'rating': rating, 'title_ref': title_ref}
+        return self._request_ratings('post', '/users/%s/ratings/title/actual' % self.id, data=data)
+
+    def get_my_rating(self, rating_id):
+        # Broken
+        return self._request('get', '/users/%s/ratings/title/actual/%s' % (self.id, rating_id), data={}).json
+
+    def update_my_rating(self, rating_id, rating):
+        # Broken
+        data = {'rating': rating}
+        return self._request_ratings('put', '/users/%s/ratings/title/actual/%s' % (self.id, rating_id), data=data)
+
+    def get_predicted(self):
+        return self._request('get', '/users/%s/ratings/title/predicted' % self.id).json
+
+    def _request_ratings(self, method, url_path, title_refs=[], data = {}):
+        if not data:
+            data['title_refs'] =  ','.join(title_refs)
+        return self._request(method, url_path, data=data).json
+
+    def get_reccomendations(self, start_index=None, max_results=None):
+        data = {'start_index': start_index, 'max_results': max_results}
+        return self._request('get', '/users/%s/recommendations' % self.id, data=data).json
+
+
+    def _request(self, method, url, data={}, headers={}):
+        return self._netflix_client._request(method, url, data, headers, client=self._client)
 
