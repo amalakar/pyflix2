@@ -221,9 +221,12 @@ class TestNetflixAPIV2(unittest.TestCase):
         self.assertIsNotNone(my_rating)
         dump_object(my_rating)
         
-        recommended = user.get_reccomendations()
-        self.assertIsNotNone(recommended)
-        dump_object(recommended)
+        reco = user.get_reccomendations()
+        self.assertIsNotNone(reco)
+        dump_object(reco)
+        for movie in reco['recommendations']:
+            print movie['title']['regular']
+
         
 def dump_object(obj):
     if DUMP_OBJECTS:

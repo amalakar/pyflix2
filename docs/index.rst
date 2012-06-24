@@ -1,14 +1,28 @@
-Welcome to pyflix2's documentation!
-===================================
 
-API:
----------
+.. include:: ../README.rst
+
+User Guide
+----------
+
+All of pyflix2's functionality can be access via the classes  :py:class:`~Netflix.NetflixAPIV1` or :py:class:`~Netflix.NetflixAPIV2` based on
+the version you want to use and :py:class:`~Netflix.User`.
+
+==========================================================  =================================================================
+API endpoint                                                        Method 
+----------------------------------------------------------  -----------------------------------------------------------------
+
+/catalog/titles                                             autofunction:: search_titles :py:meth:`~NetflixAPIV2.search_titles
+/catalog/titles/autocomplete                                :py:meth:`~NetflixAPIV2.title_autocomplete
+==========================================================  =================================================================
+
+API
+---
 
 .. autosummary::
     .. toctree::
 
-    Netflix.NetflixAPIV1
-    Netflix.NetflixAPIV2
+    ~Netflix.NetflixAPIV1
+    ~Netflix.NetflixAPIV2
 
 .. automodule:: Netflix
     :members:

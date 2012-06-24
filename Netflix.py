@@ -461,13 +461,11 @@ class NetflixAPIV2(_NetflixAPI):
 
 class User:
     def __init__(self, netflix_client, access_token, access_token_secret, id=None):
-        """"
+        """
         :param access_token: (Optional) User access token obtained using OAuth three legged authentication 
         :param access_token_secret: (Optional) User access token  secret obtained using OAuth 
             three legged authentication 
         """
-        """ Sets the user access token and secret for future calls
-        Must be set for calls that require a user to be authenticated"""
 
         if not access_token:
             raise NetflixError("access_token cannot be null/empty")
@@ -536,7 +534,8 @@ class User:
         :param etag: The queue's ETag value that Netflix API returned the last time you 
             accessed the queue. Use this for concurrency control.
 
-        :returns: If your request is successful, Netflix API returns the queue entries that got
+        :returns: 
+            If your request is successful, Netflix API returns the queue entries that got
         created or modified with your POST request. If this request involved moving a title within 
         a queue, the API returns only that queue item with its updated position. The API throws an error 
         if a title is not available. The POST operation fails if the queue has been updated since the time 

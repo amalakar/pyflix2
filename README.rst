@@ -1,29 +1,41 @@
-A python wrapper around the netflix API
-=======================================
+pyflix2: python module for accessing Netflix webservice
+=======================================================
+Release v\ |version|.
+
+pyflix2 is a `BSD licensed` python module for accessing netflix API (both v1 and v2)
+
+.. code-block:: python
+
+    netflix = NetflixAPIV2( 'appname', 'key', 'shared_secret')
+    movies = netflix.title_autocomplete('Terminator', filter='instant')
+    for title in movies['autocomplete']['title']:
+        print title
 
 
-In order to use the system, you need to get a developer key/secret from the Netflix developer site.  You will need those for all requests to Netflix.
+.. code-block:: python
 
-To help you get a better understanding of how this works, here's a step by step tutorial.
+    user = netflix.get_user('access_token', 'access_token_secret')
+    reco = user.get_reccomendations()
+    for movie in reco['recommendations']:
+        print movie['title']['regular']
 
-- Get a developer API key and secret
-- Put those values in the example.py script
-- Run the example.py script.  In this configuration it will perform all of the actions it can do without an authenticated user.
-- Run the example.py script with the "-a" flag.  Since you don't already have user keys, it will start the process of retrieving them.
-- Visit the website listed, and insert the request values into the example.py script under EXAMPLE_USER['request']
-- Run the example.py script again with the "-a" flag.  This will generate the access values.  Insert those into the script under EXAMPLE_USER['access']
-- At this point you can do any of the actions with example.py -a
+Note: 
 
-In your own coding you may want to run these steps differently, or more silently.  You can retain the configuration within your application.  The example is somewhat clunky but should help you understand what can be done with the various levels of authentication.
+- Here ``appname``, ``key`` and ``shared_secret`` needs to be obtained from: http://developer.netflix.com/apps/mykeys.
+- The ``access_token``, ``access_token_secret`` needs to be obtained programmatically using :py:meth:`~NetflixAPIV2.get_request_token` 
+  and :py:meth:`~NetflixAPI.get_access_token`
 
-Note: This code was originally based on Pyflix <http://code.google.com/p/pyflix/> but it has been refactored and changed heavily.
-And very little trace of original code can be found. But when I started I based it on pyflix 
 Features
 --------
 
 - Supports both V1 and V2 of netflix REST API
-- Supports both out-of-bound (oauth 1.0a) and  vanila three legged oauth auhentication (oauth)
-- Internally uses Requests <https://github.com/kennethreitz/requests> for making HTTP calls
+- Supports both out-of-bound (oauth 1.0a) and  vanila three legged oauth auhentication
+- Provides easy to use and well documented functional interface for all the API exposed by netflix
+- Throws Exception for all kinds of error situation making it easier to integrate with other program
+- V1 and V2 APIs are exposed using different classes, so version specific features can be used easily
+- Internally uses `Requests <https://github.com/kennethreitz/requests>`_ for making HTTP calls
+- Want any new feature? please `file an issue <https://github.com/amalakar/pyflix2/issues/new>`_
 
+Documentation: http://pyflix2.readthedocs.org/en/latest/index.html
 
 .. _`the repository`: https://github.com/amalakar/pyflix2
