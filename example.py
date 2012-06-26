@@ -7,17 +7,15 @@ import time
 import sys
 import pprint
 
-__version__ = '0.13.0'
-
+# WARNING : This exampel script is work in progrees, things may be broken
 def get_auth(netflix, appname, verbose):
-    (request_token, requset_token_secret, url) = netflix.get_request_token(use_OOB = True)
-    print "Go to %s, sign in and grant permission to netflix account to [%s]" % (url, appname)
+    (request_token, request_token_secret, url) = netflix.get_request_token(use_OOB = True)
+    print "Go to %s sign in and grant permission to netflix account to [%s]" % (url, appname)
 
     verification_code = raw_input('Please enter Verifier Code:')
     (access_token, access_token_secret) = netflix.get_access_token(request_token, request_token_secret, verification_code)
-    print "now put this key / secret in ~/.pyflix.cfg so you don't have to \
-                    re-authorize again:\n 'key': '%s',\n 'secret': '%s'\n" % (access_token, access_token_secret)
-    
+    print "now put this access_token / access_token_secret in ~/.pyflix.cfg so you don't have to re-authorize again:\n\naccess_token = %s\naccess_token_secret = %s\n\n" % (access_token, access_token_secret)
+
     return access_token
 
 def do_search(netflix, discs, title):
