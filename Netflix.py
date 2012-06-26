@@ -76,6 +76,8 @@ class _NetflixAPI(object):
     def get_request_token(self, use_OOB = True):
         """Obtains the request token/secret and the authentication URL
 
+        :url: /oauth/request_token
+
         :param use_OOB: (Optional) If set to false the oauth out-of-bound authentication is used
             which requires the user to go to nerflix website and get the verfication code
             and provide here
@@ -114,6 +116,8 @@ class _NetflixAPI(object):
             - The ``request_token`` and ``request_token_secret`` has been authorized  by visiting the netflix authorization URL by user
             - The user has obtained the verification code (when ``use_OOB`` was set in ``get_request_token`` from netflix website)
 
+        :url: /oauth/access_token
+
         :param request_token: The request token obtained using :meth: get_request_token 
         :param request_token_secret: The request token secret obtained using :py:meth:`~NetflixAPI.get_request_token`
         :param oauth_verification_code: (Optional) The verification code obtained from netflix website, if ``use_OOB`` 
@@ -126,7 +130,7 @@ class _NetflixAPI(object):
         # Step 3: Obtain access token
         access_oauth_hook = OAuthHook(request_token, request_token_secret)
         client = requests.session( hooks={'pre_request': access_oauth_hook})
-        params = {'oauth_token': request_token.key}
+        params = {'oauth_token': request_token}
 
         if oauth_verification_code:
             params['oauth_verifier'] = oauth_verification_code
@@ -138,6 +142,8 @@ class _NetflixAPI(object):
     def search_titles(self, term, filter=None, expand=None, start_index=None, max_results=None):
         """Use the catalog titles resource to search the netflix movie catalog(includes all medium)
         for titles of movies and television series. 
+
+        :url: /catalog/titles 
 
         :param term: The word or term to search the catalog for. The Netflix
             API searches the title and synopses of catalog titles for a match.
@@ -167,6 +173,8 @@ class _NetflixAPI(object):
     def get_catalog(self):
         """Retrieve a complete index of all instant-watch titles in the Netflix catalog
 
+        :url: /catalog/titles/index
+
         :Returns:
             Returns an iter object which can be written to disk etc
         """
@@ -180,6 +188,8 @@ class _NetflixAPI(object):
         Netflix API returns from this request to the title search methods in order 
         to conduct the actual title search. You can only autocomplete titles 
         (not other items, like names of actors).
+
+        :url: /catalog/titles/autocomplete
 
         :param term: The string to look for partial match in short titles
         :param start_index:  (optional) The zero-based offset into the list that results from the query.
@@ -534,13 +544,12 @@ class User:
         :param etag: The queue's ETag value that Netflix API returned the last time you 
             accessed the queue. Use this for concurrency control.
 
-        :returns: 
-            If your request is successful, Netflix API returns the queue entries that got
-        created or modified with your POST request. If this request involved moving a title within 
-        a queue, the API returns only that queue item with its updated position. The API throws an error 
-        if a title is not available. The POST operation fails if the queue has been updated since the time 
-        you retrieved the ETag value that you passed in. Each successful (or partially successful) POST 
-        response includes a new ETag value that you can then use in subsequent requests.
+        :returns:  If it is successful, Netflix API returns the queue entries that got
+            created or modified with your POST request. If this request involved moving a title within 
+            a queue, the API returns only that queue item with its updated position. The API throws an error 
+            if a title is not available. The POST operation fails if the queue has been updated since the time 
+            you retrieved the ETag value that you passed in. Each successful (or partially successful) POST 
+            response includes a new ETag value that you can then use in subsequent requests.
         """
         data = {'title_ref': title_ref, 'position': position, 'etag': etag}
         return self._request_queue("post", '/users/%s/queues/instant' % self.id,
