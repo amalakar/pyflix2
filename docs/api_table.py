@@ -25,7 +25,7 @@ def get_default_arg(args, defaults, i):
             value = '"%s"' % value
         return DefaultArg(True, value)
 
-Summary = namedtuple('Summary', 'url sig doc')
+Summary = namedtuple('Summary', 'url method sig')
 
 def get_method_summary(class_obj):
     methods = {}
@@ -44,7 +44,7 @@ def get_method_summary(class_obj):
             elif arg != 'self':
                 args_str.append(arg)
             i += 1
-        sig = "%s(%s)" % (method, ", ".join(args_str))
+        sig =  ", ".join(args_str)
 
         doc = inspect.getdoc(getattr(class_obj, method))
         #print doc
@@ -54,8 +54,8 @@ def get_method_summary(class_obj):
             if m:
                 url = m.group(1)
 
-        link = ":py:meth:`~%s.%s`" %(class_obj.__name__, method)
-        summary.append(Summary(url, sig, link))
+        #link = ":py:meth:`~%s.%s`" %(class_obj.__name__, method)
+        summary.append(Summary(url, method, sig))
 
     return summary
 
@@ -63,7 +63,8 @@ def print_table(full_summary, name):
     print ".. csv-table:: %s api" % name
     print '    :header: "URL", "Signature", "More"\n'
     for summary in full_summary:
-        print '    "*%s*", "%s", "%s"' % (summary.url, summary.sig, summary.doc)
+        print '    "*%s*", "%s(*%s*)", ":py:meth:`~%s.%s`"' % \
+                (summary.url, summary.method, summary.sig, name, summary.method)
 
 summary_nf = get_method_summary(NetflixAPIV2)
 summary_u = get_method_summary(User)

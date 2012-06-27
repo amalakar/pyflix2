@@ -11,8 +11,8 @@ the version you want to use and :py:class:`~Netflix.User`.
 
 .. currentmodule:: Netflix
 
-URL to Method Mapping
----------------------
+Netflix API endpoint to Method Mapping
+--------------------------------------
 
 .. include:: api_table.rst
 
