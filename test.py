@@ -7,7 +7,7 @@ import ConfigParser
 
 MOVIE_TITLE = "Foo Fighters"
 
-DUMP_OBJECTS = True
+DUMP_OBJECTS = False 
 
 class TestNetflixAPIV1(unittest.TestCase):
 
@@ -19,11 +19,11 @@ class TestNetflixAPIV1(unittest.TestCase):
                                    consumer_key=self.config('consumer_key'),
                                    consumer_secret=self.config('consumer_secret')) 
                                    #logger=sys.stderr)
+        self.user = self.netflix.get_user( self.config('access_token'),
+                                   self.config('access_token_secret'))
 
     def test_token_functions(self):
         pass
-        # I'd love to test the token functions, but unfortunately running these
-        # invalidates the existing tokens.  Foo.
 
 
     def test_catalog_functions(self):
@@ -31,7 +31,6 @@ class TestNetflixAPIV1(unittest.TestCase):
         for title in titles[u'catalog_titles'][u'catalog_title']:
             self.assertIsNotNone(title[u'title'][u'regular'])
             self.assertIsNotNone(title[u'id'])
-            print title['id']
         self.assertEqual(len(titles['catalog_titles'][u'catalog_title']), 2) 
 
         autocomplete_titles = self.netflix.title_autocomplete("matrix")
@@ -47,61 +46,27 @@ class TestNetflixAPIV1(unittest.TestCase):
         self.assertIsNotNone(person)
 
     def test_user_functions(self):
-        user = self.netflix.get_user( self.config('access_token'),
-                                   self.config('access_token_secret'))
-        self.assertIsNotNone(user)
-        #dump_object(user)
+        self.assertIsNotNone(self.user)
+        #dump_object(self.user)
 
-        details = user.get_details()
+        details = self.user.get_details()
         self.assertIsNotNone(details)
         #dump_object(details)
 
-        user_s = user.get_title_states()
+        user_s = self.user.get_title_states()
         self.assertIsNotNone(user_s)
         #dump_object(user_s)
 
-        feeds = user.get_feeds()
+        feeds = self.user.get_feeds()
         self.assertIsNotNone(feeds)
 
-        queues = user.get_queues()
+        queues = self.user.get_queues()
+        dump_object(queues)
         self.assertIsNotNone(queues)
 
-        instant_queues = user.get_queues()
+        instant_queues = self.user.get_queues()
         self.assertIsNotNone(instant_queues)
         dump_object(instant_queues)
-
-        #dump_object(feeds)
-##    # DISC TESTS
-#    def test_disc_functions(self):
-#        return  
-#        data = netflix_client.catalog.search_titles('Cocoon', 1, 2)
-#        test_subject = data[0]
-#        disc = NetflixDisc(testSubject, netflix_client)
-#        formats = disc.get_info('formats')
-#        self.assertIsInstance(formats, dict)
-#        synopsis = disc.get_info('synopsis')
-#        self.assertIsInstance(synopsis, dict)
-#
-#    def test_user_functions(self):
-#        return 
-#        netflix_user = NetflixUser(EXAMPLE_USER,netflixClient)
-#        user = netflix_user.get_data()
-#        self.assertIsInstance(user['first_name'], str)
-#        data = netflix_client.catalog.search_titles('Cocoon',1,2)
-#        ratings = netflix_user.getRatings(data)
-#        history = netflix_user.get_rental_history('shipped',updated_min=1219775019,max_results=4)
-#        pprint(history)
-#        self.assertTrue(int(history['rental_history']['number_of_results']) <= 5)
-#
-#        queue = NetflixUserQueue(netflix_user)
-#        response = queue.add_title( urls=["http://api.netflix.com/catalog/titles/movies/60002013"] )
-#        response = queue.add_title( urls=["http://api.netflix.com/catalog/titles/movies/60002013"], position=1 )
-#        response = queue.remove_title( id="60002013")
-#
-#        disc_available = queue.get_available('disc')
-#        instant_available =  queue.get_available('instant')
-#        disc_saved =  queue.get_saved('disc')
-#        instant_saved = queue.get_saved('instant')
 
 class TestNetflixAPIV2(unittest.TestCase):
 
@@ -113,11 +78,11 @@ class TestNetflixAPIV2(unittest.TestCase):
                                    consumer_key=self.config('consumer_key'),
                                    consumer_secret=self.config('consumer_secret'), 
                                    logger=sys.stderr)
+        self.user = self.netflix.get_user( self.config('access_token'),
+                                   self.config('access_token_secret'))
 
     def test_token_functions(self):
         pass
-        # I'd love to test the token functions, but unfortunately running these
-        # invalidates the existing tokens.  Foo.
 
 
     def test_catalog_functions(self):
@@ -142,7 +107,7 @@ class TestNetflixAPIV2(unittest.TestCase):
 
         autocomplete_titles_instant= self.netflix.title_autocomplete("matrix", filter="instant")
         autocomplete_titles_disc = self.netflix.title_autocomplete("matrix", filter="disc")
-        
+
         instant_count = None
         disc_count = None
         if autocomplete_titles_instant['autocomplete']:
@@ -151,87 +116,97 @@ class TestNetflixAPIV2(unittest.TestCase):
             disc_count = len(autocomplete_titles_disc['autocomplete']['title'])
         self.assertNotEqual(instant_count, disc_count)
 
-    def test_user_functions(self):
-        user = self.netflix.get_user( self.config('access_token'),
-                                   self.config('access_token_secret'))
-        self.assertIsNotNone(user)
-        #dump_object(dir(user))
+    def test_user_details(self):
+        self.assertIsNotNone(self.user)
+        #dump_object(dir(self.user))
 
-        details = user.get_details()
+        details = self.user.get_details()
         self.assertIsNotNone(details)
         #dump_object(details)
 
-        feeds = user.get_feeds()
+    def test_user_feeds(self):
+        feeds = self.user.get_feeds()
         self.assertIsNotNone(feeds)
         #dump_object(feeds)
 
-        title_states = user.get_title_states(["http://api.netflix.com/catalog/titles/movies/20557937", "http://api.netflix.com/catalog/titles/movies/60027695"]) 
+    def test_user_user_states(self):
+        title_states = self.user.get_title_states(["http://api.netflix.com/catalog/titles/movies/20557937", "http://api.netflix.com/catalog/titles/movies/60027695"]) 
         self.assertIsNotNone(title_states)
         #dump_object(title_states)
 
-        queues = user.get_queues(sort_order="alphabetical", start_index=0, max_results=10)
+    def test_user_queues(self):
+        queues = self.user.get_queues(sort_order="alphabetical", start_index=0, max_results=10)
         self.assertIsNotNone(queues)
         dump_object(queues)
 
-        queues_instant = user.get_queues_instant(sort_order="alphabetical", start_index=0, max_results=10)
+        queues_instant = self.user.get_queues_instant(sort_order="alphabetical", start_index=0, max_results=10)
         self.assertIsNotNone(queues_instant)
-        dump_object(queues_instant)
-    
+        pprint.pprint(queues_instant)
+        q = self.user.get_resource('http://api.netflix.com/users/BQAJAAEDEGhwxQTK0xDSFPwzrZmyjLggDHeoYPZWblNhToImGOz78JQyfW6C2NhvSWsnrjOGcmg./queues/instant/available/70138768')
+        pprint.pprint(q.json)
+        for queue in queues_instant['queue']:
+            #q = self.user.get_resource('http://api.netflix.com/users/BQAJAAEDEGhwxQTK0xDSFPwzrZmyjLggDHeoYPZWblNhToImGOz78JQyfW6C2NhvSWsnrjOGcmg./queues/instant/available/70138768')
+            print queue['id']
+            #pprint.pprint(q.json)
+            pass
+
         try:
-            queues_disc = user.get_queues_disc(sort_order="alphabetical", start_index=0, max_results=10)
+            queues_disc = self.user.get_queues_disc(sort_order="alphabetical", start_index=0, max_results=10)
             self.assertIsNotNone(queues_disc)
             dump_object(queues_disc)
         except NetflixError as e :
             dump_object(e)
 
 
-        queues_ia = user.get_queues_instant_available(sort_order="alphabetical", start_index=0, max_results=10)
+        queues_ia = self.user.get_queues_instant_available(sort_order="alphabetical", start_index=0, max_results=10)
         self.assertIsNotNone(queues_ia)
         dump_object(queues_ia)
 
-        queues_is = user.get_queues_instant_saved(sort_order="alphabetical", start_index=0, max_results=10)
+        queues_is = self.user.get_queues_instant_saved(sort_order="alphabetical", start_index=0, max_results=10)
         self.assertIsNotNone(queues_is)
         dump_object(queues_is)
 
-        rental_history = user.get_rental_history()
+    def test_user_rental_history(self):
+        rental_history = self.user.get_rental_history()
         self.assertIsNotNone(rental_history)
         dump_object(rental_history)
 
-        rental_history_watched = user.get_rental_history('watched')
+        rental_history_watched = self.user.get_rental_history('watched')
         self.assertIsNotNone(rental_history_watched)
         dump_object(rental_history_watched)
 
-        ratings = user.get_rating(['http://api.netflix.com/catalog/titles/programs/144409/70116820'])
+    def test_user_ratings(self):
+        ratings = self.user.get_rating(['http://api.netflix.com/catalog/titles/programs/144409/70116820'])
         self.assertIsNotNone(ratings)
         dump_object(ratings)
 
-        ratings_actual = user.get_actual_rating(['http://api.netflix.com/catalog/titles/movies/70090313'])
+        ratings_actual = self.user.get_actual_rating(['http://api.netflix.com/catalog/titles/movies/70090313'])
         self.assertIsNotNone(ratings_actual)
         dump_object(ratings_actual)
 
-        added_rating = user.add_my_rating('http://api.netflix.com/catalog/titles/programs/144409/70116820', 3)
+        added_rating = self.user.add_my_rating('http://api.netflix.com/catalog/titles/programs/144409/70116820', 3)
         self.assertIsNotNone(added_rating)
         dump_object(added_rating)
 
-        updated_rating = user.update_my_rating('70116820', 5)
+        updated_rating = self.user.update_my_rating('70116820', 5)
         self.assertIsNotNone(updated_rating)
         dump_object(updated_rating)
 
-        my_rating = user.get_my_rating('70116820')
+        my_rating = self.user.get_my_rating('70116820')
         self.assertIsNotNone(my_rating)
         dump_object(my_rating)
 
-        predicted_ratings = user.get_predicted_ratings(['http://api.netflix.com/catalog/titles/programs/144409/70116820'])
+        predicted_ratings = self.user.get_predicted_ratings(['http://api.netflix.com/catalog/titles/programs/144409/70116820'])
         self.assertIsNotNone(predicted_ratings)
         dump_object(predicted_ratings)
 
-        reco = user.get_reccomendations()
+        reco = self.user.get_reccomendations()
         self.assertIsNotNone(reco)
         dump_object(reco)
         for movie in reco['recommendations']:
-            print movie['title']['regular']
+            self.assertIsNotNone(movie['title']['regular'])
 
-        
+
 def dump_object(obj):
     if DUMP_OBJECTS:
         pprint.pprint(obj)

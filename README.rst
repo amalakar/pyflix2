@@ -39,7 +39,7 @@ Features
 - Throws Exception for all kinds of error situation making it easier to integrate with other program
 - V1 and V2 APIs are exposed using different classes, so version specific features can be used easily
 - Internally uses `Requests <https://github.com/kennethreitz/requests>`_ for making HTTP calls
-- Want any new feature? please `file an issue <https://github.com/amalakar/pyflix2/issues/new>`_
+- Want any new feature? please `file a feature request <https://github.com/amalakar/pyflix2/issues/new>`_
 
 Documentation: http://pyflix2.readthedocs.org/en/latest/index.html
 

@@ -603,6 +603,9 @@ class User:
         return self._request_queue("post", '/users/%s/queues/instant' % self.id,
                           sort_order, start_index, max_results, updated_min)
 
+    def get_resource(self, url, data={}):
+        return self._request("get", url,data=data)
+                
     def get_queues_instant_available(self, entry_id=None, sort_order=None, 
                                     start_index=None, max_results=None, updated_min=None):
         """Retrieves availability details about the subscriber's instant-watch queue
