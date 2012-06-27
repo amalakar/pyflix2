@@ -1,25 +1,30 @@
 pyflix2: python module for accessing Netflix webservice
 =======================================================
-Release v\ |version|.
 
-pyflix2 is a `BSD licensed` python module for accessing netflix API (both v1 and v2)
+Introduction
+------------
 
-.. code-block:: python
+*pyflix2* is a `BSD licensed` python module for accessing netflix API (both v1 and v2)
+Netflix provides REST interfaces to access it's catalog and various user data.
+This module exposes easy to use object oriented interfaces that is inteded to make it even easier
+for python programmers to use.
+
+Example
+-------
+
+::
 
     netflix = NetflixAPIV2( 'appname', 'key', 'shared_secret')
     movies = netflix.title_autocomplete('Terminator', filter='instant')
     for title in movies['autocomplete']['title']:
         print title
 
-
-.. code-block:: python
-
     user = netflix.get_user('access_token', 'access_token_secret')
     reco = user.get_reccomendations()
     for movie in reco['recommendations']:
         print movie['title']['regular']
 
-.. note::
+Note
     - Here ``appname``, ``key`` and ``shared_secret`` needs to be obtained from: http://developer.netflix.com/apps/mykeys.
     - The ``access_token``, ``access_token_secret`` needs to be obtained programmatically using :py:meth:`~NetflixAPIV2.get_request_token` 
       and :py:meth:`~NetflixAPI.get_access_token`

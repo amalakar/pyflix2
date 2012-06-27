@@ -46,7 +46,7 @@ html: api_table.rst
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
 
-api_table.rst: ../Netflix.py
+api_table.rst: ../Netflix.py api_table.py
 	python api_table.py > api_table.rst
 
 dirhtml:

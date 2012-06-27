@@ -1,4 +1,6 @@
 #! /usr/bin/env python
+""" A script to generate a tabular view of url endpoints and method signature from the module inline 
+documentation"""
 
 import sys
 import os
@@ -39,7 +41,7 @@ def get_method_summary(class_obj):
             default_arg = get_default_arg(args.args, args.defaults, i)
             if default_arg.valid:
                 args_str.append("%s=%s" % (arg, default_arg.value))
-            else:
+            elif arg != 'self':
                 args_str.append(arg)
             i += 1
         sig = "%s(%s)" % (method, ", ".join(args_str))
@@ -57,21 +59,16 @@ def get_method_summary(class_obj):
 
     return summary
 
+def print_table(full_summary, name):
+    print ".. csv-table:: %s api" % name
+    print '    :header: "URL", "Signature", "More"\n'
+    for summary in full_summary:
+        print '    "*%s*", "%s", "%s"' % (summary.url, summary.sig, summary.doc)
+
 summary_nf = get_method_summary(NetflixAPIV2)
 summary_u = get_method_summary(User)
 
-print ".. csv-table:: NetflixAPIV2 api"
-print '    :header: "URL", "Signature", "More"\n'
-
-for summary in summary_nf:
-    print '    "%s", "%s", "%s"' % (summary.url, summary.sig, summary.doc)
-
-print "\n\n.. csv-table:: User api"
-print '    :header: "URL", "Signature", "More"\n'
-
-
-for summary in summary_u:
-    print '    "%s", "%s", "%s"' % (summary.url, summary.sig, summary.doc)
-
+print_table(summary_nf, 'NetflixAPIV2')
+print_table(summary_u, 'User')
 
 

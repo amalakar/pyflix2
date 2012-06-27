@@ -10,9 +10,11 @@ All of pyflix2's functionality can be access via the classes  :py:class:`~Netfli
 the version you want to use and :py:class:`~Netflix.User`.
 
 .. currentmodule:: Netflix
-.. include:: api_table.rst
 
+URL to Method Mapping
 ---------------------
+
+.. include:: api_table.rst
 
 API
 ---
