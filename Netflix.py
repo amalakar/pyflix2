@@ -76,7 +76,7 @@ class _NetflixAPI(object):
     def get_request_token(self, use_OOB = True):
         """Obtains the request token/secret and the authentication URL
 
-        :url: /oauth/request_token
+        url: /oauth/request_token
 
         :param use_OOB: (Optional) If set to false the oauth out-of-bound authentication is used
             which requires the user to go to nerflix website and get the verfication code
@@ -116,7 +116,7 @@ class _NetflixAPI(object):
             - The ``request_token`` and ``request_token_secret`` has been authorized  by visiting the netflix authorization URL by user
             - The user has obtained the verification code (when ``use_OOB`` was set in ``get_request_token`` from netflix website)
 
-        :url: /oauth/access_token
+        url: /oauth/access_token
 
         :param request_token: The request token obtained using :meth: get_request_token 
         :param request_token_secret: The request token secret obtained using :py:meth:`~NetflixAPI.get_request_token`
@@ -127,6 +127,7 @@ class _NetflixAPI(object):
             Returns the pair ``(access_token, access_token_secret)``
         :rtype: (string, string)
         """
+
         # Step 3: Obtain access token
         access_oauth_hook = OAuthHook(request_token, request_token_secret)
         client = requests.session( hooks={'pre_request': access_oauth_hook})
@@ -143,7 +144,7 @@ class _NetflixAPI(object):
         """Use the catalog titles resource to search the netflix movie catalog(includes all medium)
         for titles of movies and television series. 
 
-        :url: /catalog/titles 
+        url: /catalog/titles
 
         :param term: The word or term to search the catalog for. The Netflix
             API searches the title and synopses of catalog titles for a match.
@@ -173,7 +174,7 @@ class _NetflixAPI(object):
     def get_catalog(self):
         """Retrieve a complete index of all instant-watch titles in the Netflix catalog
 
-        :url: /catalog/titles/index
+        url: /catalog/titles/index
 
         :Returns:
             Returns an iter object which can be written to disk etc
@@ -189,7 +190,7 @@ class _NetflixAPI(object):
         to conduct the actual title search. You can only autocomplete titles 
         (not other items, like names of actors).
 
-        :url: /catalog/titles/autocomplete
+        url: /catalog/titles/autocomplete
 
         :param term: The string to look for partial match in short titles
         :param start_index:  (optional) The zero-based offset into the list that results from the query.
@@ -208,15 +209,10 @@ class _NetflixAPI(object):
             data['filters'] = NETFLIX_FILTER[filter]
         return self._request("get", url_path, data).json
 
-    def get_resource(self, url):
-        self._log(("get", url))
-        data = {'output': 'json'}
-
-        info = self._request('get', url, data=data)
-        return info.json
-
     def get_title(self, id,  category=None):
         """ Retrieve details for specific catalog title
+
+        url: /catalog/titles/movies/title_id, /catalog/titles/series/series_id, /catalog/titles/series/series_id/seasons/season_id, /catalog/titles/programs/program_id
 
         :param id: This is the id that is returned for movies in ``search_movie`` call (id looks like
             ``http://api.netflix.com/catalog/titles/movies/60000870``)
@@ -227,21 +223,23 @@ class _NetflixAPI(object):
             The detail of the movie **OR** (award/category..) etc of the movie as mentioned by category
         """
 
-        if 'http' in id:
+        if id.startswith('http'):
             url=id
             if category and EXPANDS.index("@" + category):
                 url = "%s/%s" % (url, category)
             return self._request('get', url).json
         else:
-            raise NetflixError("The id should be like: http://api.netflix.com/catalog/people/185930")
+            raise NetflixError("The id should be like: http://api.netflix.com/catalog/movies/60000870")
 
     def search_people(self, term, start_index=None, max_results=None):
         """search for people in the catalog by their name or a portion of their name.
 
+        url: /catalog/people
+
         :param term: The term in the person's name to search for in the catalog.
         :param start_index:  (optional) The zero-based offset into the list that results from the query.
         :param max_results: (optinoal) The maximum number of results to return. 
-        
+
         :Retruns:
             Returns results that include catalog title entries for titles that involve people that match 
             the specified name. Results also include references to person details.
@@ -256,21 +254,25 @@ class _NetflixAPI(object):
         """ You can retrieve detailed information about a person in the Catalog, using that person's ID,
         that includes a biography, featured titles, and a complete list of titles
 
+        url: /catalog/people/person_id
+
         :param id: This is the id that is returned for the person in ``search_people`` call (id looks like
             ``http://api.netflix.com/catalog/people/185930``
 
         :returns: The dict object containng details of the person
 
         """
-        if 'http' in id:
+        if id.startswith('http'):
             url=id
-            return self.get_resource(url)
+            return self._request('get', url).json
         else:
             raise NetflixError("The id should be like: http://api.netflix.com/catalog/people/185930")
 
 
     def get_user(self, user_token, user_token_secret):
         """ Returns the user object, which could then be used to make further user specific calls 
+
+        url: /users/current
 
         :param id: Retrieves information about the user whose ``id`` is given. If ``id`` is not given
             the current user's infomation is retrieved
@@ -284,11 +286,6 @@ class _NetflixAPI(object):
     def _assert_authorized(self):
         if not self._user_credential_set:
             raise NetflixAuthRequiredError("User is not authorized")
-
-    @staticmethod
-    def get_integer_id(url):
-        """ This method can find the id and the type of resource from a netflix URL"""
-        raise NotImplementedError
 
     @staticmethod
     def _append_param(url, parameters):
@@ -378,6 +375,8 @@ class NetflixAPIV1(_NetflixAPI):
         """Use the catalog titles resource to search the netflix movie catalog(includes all medium)
         for titles of movies and television series. 
 
+        url: /catalog/titles
+
         :param term: The word or term to search the catalog for. The Netflix
             API searches the title and synopses of catalog titles for a match.
         :param start_index:  (optional) The zero-based offset into the list that results
@@ -398,6 +397,8 @@ class NetflixAPIV1(_NetflixAPI):
         Netflix API returns from this request to the title search methods in order 
         to conduct the actual title search. You can only autocomplete titles 
         (not other items, like names of actors).
+
+        url: /catalog/titles/autocomplete
 
         :param term: The string to look for partial match in short titles
         :param start_index:  (optional) The zero-based offset into the list that results from the query.
@@ -432,6 +433,8 @@ class NetflixAPIV2(_NetflixAPI):
         """Use the catalog titles resource to search the netflix movie catalog(includes all medium)
         for titles of movies and television series. 
 
+        url: /catalog/titles
+
         :param term: The word or term to search the catalog for. The Netflix
             API searches the title and synopses of catalog titles for a match.
         :param filter: The filter could be either the string `"instant"` or `"disc"`
@@ -456,6 +459,8 @@ class NetflixAPIV2(_NetflixAPI):
         Netflix API returns from this request to the title search methods in order 
         to conduct the actual title search. You can only autocomplete titles 
         (not other items, like names of actors).
+
+        url: /catalog/titles/autocomplete
 
         :param term: The string to look for partial match in short titles
         :param start_index:  (optional) The zero-based offset into the list that results from the query.
@@ -496,18 +501,28 @@ class User:
         self.id = id
 
     def get_details(self):
-        """Returns information about the subscriber with the specified user ID"""
+        """Returns information about the subscriber with the specified user ID
+        url: /users/user_id
+        """
         url_path = '/users/' + self.id
         return self._request('get', url_path ).json
 
     def get_feeds(self):
-        """Netflix API returns a list of URLs of all feeds available for the specified user."""
+        """Netflix API returns a list of URLs of all feeds available for the specified user.
+        url: /users/user_id/feed
+        """
 
         url_path = '/users/' + self.id + "/feeds"
         return self._request('get', url_path).json
 
     def get_title_states(self, title_refs=None):
-        """returns a series of records that indicate the relationship between the subscriber and one or more titles."""
+        """returns a series of records that indicate the relationship between the subscriber and one or more titles.
+        url: /users/user_id/title_states
+
+        :param title_refs: list of catalog title URLs
+        :returns: relationship between the subscriber and the movies he has added to qeueu
+        """
+
         data = {}
         if title_refs:
             data = {"title_refs" : ",".join(title_refs)}
@@ -516,20 +531,51 @@ class User:
 
     def get_queues(self, sort_order=None, start_index=None, 
                    max_results=None, updated_min=None):
-        """Returns the contents of a subscriber's instant-watch queue."""
+        """Returns the contents of a subscriber's queue.
+        url: /users/userID/queues
+
+        :param sort_order: One of `queue_sequence`, `date_added` or `alphabetical`. Default is `queue_sequence`
+        :param start_index: The zero-based offset into the results for the query
+        :param max_results: Maximum number of results you want.
+        :param updated_min: Only results whose updated time is greater than this would be returned. 
+            Unix epoch time format or RFC 3339 format
+        :returns: Subscriber's queue
+        """
+
         return self._request_queue("get", '/users/' + self.id + "/queues", 
                           sort_order, start_index, max_results, updated_min)
 
 
     def get_queues_instant(self, sort_order=None, start_index=None, 
                    max_results=None, updated_min=None):
-        """Returns details about a subscriber's instant watch queue"""
+        """Returns details about a subscriber's instant watch queue
+
+        url: /users/userID/queues/instant
+
+        :param sort_order: One of `queue_sequence`, `date_added` or `alphabetical`. Default is `queue_sequence`
+        :param start_index: The zero-based offset into the results for the query
+        :param max_results: Maximum number of results you want.
+        :param updated_min: Only results whose updated time is greater than this would be returned. 
+            Unix epoch time format or RFC 3339 format
+        :returns: Subscriber's instant-watch queue
+        """
+
         return self._request_queue("get", '/users/' + self.id + "/queues/instant",
                           sort_order, start_index, max_results, updated_min)
 
     def get_queues_disc(self, sort_order=None, start_index=None, 
                    max_results=None, updated_min=None):
-        """Returns details about a subscriber's disc queue"""
+        """Returns details about a subscriber's disc queue
+        url: /users/userID/queues/disc
+
+        :param sort_order: One of `queue_sequence`, `date_added` or `alphabetical`. Default is `queue_sequence`
+        :param start_index: The zero-based offset into the results for the query
+        :param max_results: Maximum number of results you want.
+        :param updated_min: Only results whose updated time is greater than this would be returned. 
+            Unix epoch time format or RFC 3339 format
+        :returns: Subscriber's disc queue
+        """
+
         return self._request_queue("get", '/users/' + self.id + "/queues/disc",
                           sort_order, start_index, max_results, updated_min)
 
@@ -537,6 +583,8 @@ class User:
         """These resources automatically add the title to the saved or available queue, 
         depending on the title's availability. Use :py:meth:`~User.get_title_states`
         to see the status of the movie in your queue
+
+        url: /users/userID/queues/instant
 
         :param title_ref: The catalog title to be added to the queue.
         :param position: The position (positions start with "1") in the queue at which to 
@@ -557,7 +605,17 @@ class User:
 
     def get_queues_instant_available(self, entry_id=None, sort_order=None, 
                                     start_index=None, max_results=None, updated_min=None):
-        """Retrieves details about the entry from the subscriber's instant-watch queue"""
+        """Retrieves availability details about the subscriber's instant-watch queue
+
+        url: /users/userID/queues/instant/available
+
+        :param sort_order: One of `queue_sequence`, `date_added` or `alphabetical`. Default is `queue_sequence`
+        :param start_index: The zero-based offset into the results for the query
+        :param max_results: Maximum number of results you want.
+        :param updated_min: Only results whose updated time is greater than this would be returned. 
+            Unix epoch time format or RFC 3339 format
+        :returns: Subscriber's availability details of instant-watch queue
+        """
 
         queue_path = '/users/%s/queues/instant/available' % self.id
         if entry_id:
@@ -566,12 +624,25 @@ class User:
                 sort_order, start_index, max_results, updated_min)
 
     def delete_queues_instant_available(self, entry_id):
+        """  deletes the specified entry from the subscriber's instant watch queue.
+        url: /users/userID/queues/instant/available/entryID
+
+        :param entry_id: the entry id
+        """
         queue_path = '/users/%s/queues/instant/available/%s' %  (self.id, entry_id)
         return self._request_queue('delete', queue_path)
 
     def get_queues_instant_saved(self, entry_id=None, sort_order=None, 
                                     start_index=None, max_results=None, updated_min=None):
-        """Returns the saved status of an entry in a subscriber's instant-watch queue."""
+        """Returns the saved status of an entry in a subscriber's instant-watch queue.
+        url: /users/userID/queues/instant/saved
+
+        :param sort_order: One of `queue_sequence`, `date_added` or `alphabetical`. Default is `queue_sequence`
+        :param start_index: The zero-based offset into the results for the query
+        :param max_results: Maximum number of results you want.
+        :param updated_min: Only results whose updated time is greater than this would be returned. 
+            Unix epoch time format or RFC 3339 format
+        """
 
         queue_path = '/users/%s/queues/instant/saved' % self.id
         if entry_id:
@@ -580,6 +651,11 @@ class User:
                 sort_order, start_index, max_results, updated_min)
 
     def delete_queue_instant_saved(self, entry_id):
+        """ Deletes the specified entry from the subscriber's instant-watch queue.
+        url: /users/userID/queues/instant/saved/entryID
+
+        :param entry_id: The entry_id"""
+
         queue_path = '/users/%s/queues/instant/saved/%s' %  (self.id, entry_id)
         return self._request_queue('delete', queue_path)
 
@@ -591,6 +667,15 @@ class User:
         return self._request(method, queue_path, data=data).json
 
     def get_rental_history(self, type=None, start_index=None, max_results=None, updated_min=None):
+        """ Get a list of titles that reflect a subscriber's viewing history
+
+        url: /users/userID/rental_history
+
+        :param start_index: The zero-based offset into the results for the query
+        :param max_results: Maximum number of results you want.
+        :param updated_min: Only results whose updated time is greater than this would be returned. 
+            Unix epoch time format or RFC 3339 format
+        """
         url_path = '/users/' + self.id + '/rental_history'
         if type:
             url_path += '/watched'
@@ -601,6 +686,7 @@ class User:
         """Returns a list of movie or television series ratings for the designated subscriber. 
         If available, the subscriber's actual ratings are returned; otherwise, the resource 
         returns the Netflix-predicted ratings.
+        url: /users/userID/ratings/title 
 
         :param title_refs: List of title ids
         :returns: List of rating of given titles 
@@ -608,23 +694,48 @@ class User:
         return self._request_ratings('get', '/users/%s/ratings/title' % self.id, title_refs)
 
     def get_actual_rating(self, title_refs):
+        """Get rating for titles given by the subscriber
+        url: /users/userID/ratings/title/actual
+
+        :param title_refs: List of title ids
+        """
         return self._request_ratings('get', '/users/%s/ratings/title/actual' % self.id, title_refs)
 
     def add_my_rating(self, title_ref, rating):
+        """Add user's custom rating
+        url: /users/userID/ratings/title/actual
+
+        :param title_ref: List of title ids
+        :param rating: the rating
+        """
         data = {'rating': rating, 'title_ref': title_ref}
         return self._request_ratings('post', '/users/%s/ratings/title/actual' % self.id, data=data)
 
     def get_my_rating(self, rating_id):
-        # Broken
+        """Get particular rating that uesr has already given using the rating id
+        url: /users/userID/ratings/title/actual/ratingID
+
+        :param rating_id: the integer rating id"""
+
         return self._request('get', '/users/%s/ratings/title/actual/%s' % (self.id, rating_id), data={}).json
 
     def update_my_rating(self, rating_id, rating):
-        # Broken
+        """Udate particular rating that uesr has already given using the rating id
+        url: /users/userID/ratings/title/actual/ratingID
+
+        :param rating_id: the integer rating id
+        :param rating: the rating
+        """
         data = {'rating': rating}
         return self._request_ratings('put', '/users/%s/ratings/title/actual/%s' % (self.id, rating_id), data=data)
 
-    def get_predicted(self):
-        return self._request('get', '/users/%s/ratings/title/predicted' % self.id).json
+    def get_predicted_ratings(self, title_refs):
+        """ Get predicted rating for given titles
+        url: /users/userID/ratings/title/predicted
+
+        :param title_refs: List of title ids
+        """
+        return self._request_ratings('get', '/users/%s/ratings/title/predicted' % self.id, title_refs)
 
     def _request_ratings(self, method, url_path, title_refs=[], data = {}):
         if not data:
@@ -632,6 +743,12 @@ class User:
         return self._request(method, url_path, data=data).json
 
     def get_reccomendations(self, start_index=None, max_results=None):
+        """Get Netflix's catalog title recommendations for a subscriber, based on a subscriber's viewing history.
+        url: /users/userID/recommendations
+
+        :param start_index: The zero-based offset into the results for the query
+        :param max_results: Maximum number of results you want.
+        """
         data = {'start_index': start_index, 'max_results': max_results}
         return self._request('get', '/users/%s/recommendations' % self.id, data=data).json
 

@@ -220,7 +220,11 @@ class TestNetflixAPIV2(unittest.TestCase):
         my_rating = user.get_my_rating('70116820')
         self.assertIsNotNone(my_rating)
         dump_object(my_rating)
-        
+
+        predicted_ratings = user.get_predicted_ratings(['http://api.netflix.com/catalog/titles/programs/144409/70116820'])
+        self.assertIsNotNone(predicted_ratings)
+        dump_object(predicted_ratings)
+
         reco = user.get_reccomendations()
         self.assertIsNotNone(reco)
         dump_object(reco)

@@ -19,11 +19,11 @@ pyflix2 is a `BSD licensed` python module for accessing netflix API (both v1 and
     for movie in reco['recommendations']:
         print movie['title']['regular']
 
-Note: 
+.. note::
+    - Here ``appname``, ``key`` and ``shared_secret`` needs to be obtained from: http://developer.netflix.com/apps/mykeys.
+    - The ``access_token``, ``access_token_secret`` needs to be obtained programmatically using :py:meth:`~NetflixAPIV2.get_request_token` 
+      and :py:meth:`~NetflixAPI.get_access_token`
 
-- Here ``appname``, ``key`` and ``shared_secret`` needs to be obtained from: http://developer.netflix.com/apps/mykeys.
-- The ``access_token``, ``access_token_secret`` needs to be obtained programmatically using :py:meth:`~NetflixAPIV2.get_request_token` 
-  and :py:meth:`~NetflixAPI.get_access_token`
 
 Features
 --------

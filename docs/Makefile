@@ -41,10 +41,13 @@ help:
 clean:
 	-rm -rf $(BUILDDIR)/*
 
-html:
+html: api_table.rst
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
+
+api_table.rst: ../Netflix.py
+	python api_table.py > api_table.rst
 
 dirhtml:
 	$(SPHINXBUILD) -b dirhtml $(ALLSPHINXOPTS) $(BUILDDIR)/dirhtml
