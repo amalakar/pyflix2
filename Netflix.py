@@ -529,7 +529,7 @@ class User:
         url_path = '/users/' + self.id + "/feeds"
         return self._request('get', url_path, data=data).json
 
-    def get_queues(self, sort_order=None, start_index=None, 
+    def get_queues(self, expand=None, sort_order=None, start_index=None, 
                    max_results=None, updated_min=None):
         """Returns the contents of a subscriber's queue.
         url: /users/userID/queues
@@ -543,10 +543,10 @@ class User:
         """
 
         return self._request_queue("get", '/users/' + self.id + "/queues", 
-                          sort_order, start_index, max_results, updated_min)
+                          expand, sort_order, start_index, max_results, updated_min)
 
 
-    def get_queues_instant(self, sort_order=None, start_index=None, 
+    def get_queues_instant(self, expand=None, sort_order=None, start_index=None, 
                    max_results=None, updated_min=None):
         """Returns details about a subscriber's instant watch queue
 
@@ -559,11 +559,10 @@ class User:
             Unix epoch time format or RFC 3339 format
         :returns: Subscriber's instant-watch queue
         """
-
         return self._request_queue("get", '/users/' + self.id + "/queues/instant",
-                          sort_order, start_index, max_results, updated_min)
+                                    expand, sort_order, start_index, max_results, updated_min)
 
-    def get_queues_disc(self, sort_order=None, start_index=None, 
+    def get_queues_disc(self, expand=None, sort_order=None, start_index=None, 
                    max_results=None, updated_min=None):
         """Returns details about a subscriber's disc queue
         url: /users/userID/queues/disc
@@ -577,7 +576,7 @@ class User:
         """
 
         return self._request_queue("get", '/users/' + self.id + "/queues/disc",
-                          sort_order, start_index, max_results, updated_min)
+                                    expand, sort_order, start_index, max_results, updated_min)
 
     def add_queue_instant(self, title_ref, position, etag):
         """These resources automatically add the title to the saved or available queue, 
@@ -601,11 +600,11 @@ class User:
         """
         data = {'title_ref': title_ref, 'position': position, 'etag': etag}
         return self._request_queue("post", '/users/%s/queues/instant' % self.id,
-                          sort_order, start_index, max_results, updated_min)
+                          sort_order, None, start_index, max_results, updated_min)
 
     def get_resource(self, url, data={}):
-        return self._request("get", url,data=data)
-                
+        return self._request("get", url, data=data)
+
     def get_queues_instant_available(self, entry_id=None, sort_order=None, 
                                     start_index=None, max_results=None, updated_min=None):
         """Retrieves availability details about the subscriber's instant-watch queue
@@ -624,7 +623,7 @@ class User:
         if entry_id:
             queue_path += '/' + entry_id
         return self._request_queue("get", queue_path,
-                sort_order, start_index, max_results, updated_min)
+                None, sort_order, start_index, max_results, updated_min)
 
     def delete_queues_instant_available(self, entry_id):
         """  deletes the specified entry from the subscriber's instant watch queue.
@@ -635,7 +634,7 @@ class User:
         queue_path = '/users/%s/queues/instant/available/%s' %  (self.id, entry_id)
         return self._request_queue('delete', queue_path)
 
-    def get_queues_instant_saved(self, entry_id=None, sort_order=None, 
+    def get_queues_instant_saved(self, expand=None, entry_id=None, sort_order=None, 
                                     start_index=None, max_results=None, updated_min=None):
         """Returns the saved status of an entry in a subscriber's instant-watch queue.
         url: /users/userID/queues/instant/saved
@@ -651,7 +650,7 @@ class User:
         if entry_id:
             queue_path += '/' + entry_id
         return self._request_queue("get", queue_path,
-                sort_order, start_index, max_results, updated_min)
+                                    expand, sort_order, start_index, max_results, updated_min)
 
     def delete_queue_instant_saved(self, entry_id):
         """ Deletes the specified entry from the subscriber's instant-watch queue.
@@ -662,11 +661,13 @@ class User:
         queue_path = '/users/%s/queues/instant/saved/%s' %  (self.id, entry_id)
         return self._request_queue('delete', queue_path)
 
-    def _request_queue(self, method, queue_path, sort_order=None, start_index=None, 
+    def _request_queue(self, method, queue_path, expand=None, sort_order=None, start_index=None, 
                    max_results=None, updated_min=None):
         data = {'start_index' : start_index, "max_results": max_results, "updated_min": updated_min}
         if sort_order and SORT_ORDER.index(sort_order):
             data['sort'] = sort_order
+        if expand and expand in EXPANDS:
+            data['expand'] = expand
         return self._request(method, queue_path, data=data).json
 
     def get_rental_history(self, type=None, start_index=None, max_results=None, updated_min=None):

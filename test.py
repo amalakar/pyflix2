@@ -68,6 +68,34 @@ class TestNetflixAPIV1(unittest.TestCase):
         self.assertIsNotNone(instant_queues)
         dump_object(instant_queues)
 
+    def test_user_queues(self):
+        queues = self.user.get_queues(sort_order="alphabetical", start_index=0, max_results=10)
+        self.assertIsNotNone(queues)
+        dump_object(queues)
+
+        queues_instant = self.user.get_queues_instant(sort_order="alphabetical", start_index=0, max_results=10)
+        self.assertIsNotNone(queues_instant)
+        print "Instant Queue Movies:"
+        for movie in queues_instant['queue']['queue_item']:
+            print movie['title']['short']
+
+        try:
+            queues_disc = self.user.get_queues_disc(sort_order="alphabetical", start_index=0, max_results=10)
+            self.assertIsNotNone(queues_disc)
+            dump_object(queues_disc)
+        except NetflixError as e :
+            dump_object(e)
+
+
+        queues_ia = self.user.get_queues_instant_available(sort_order="alphabetical", start_index=0, max_results=10)
+        self.assertIsNotNone(queues_ia)
+        dump_object(queues_ia)
+
+        queues_is = self.user.get_queues_instant_saved(sort_order="alphabetical", start_index=0, max_results=10)
+        self.assertIsNotNone(queues_is)
+        dump_object(queues_is)
+
+
 class TestNetflixAPIV2(unittest.TestCase):
 
     def setUp(self):
@@ -135,20 +163,17 @@ class TestNetflixAPIV2(unittest.TestCase):
         #dump_object(title_states)
 
     def test_user_queues(self):
-        queues = self.user.get_queues(sort_order="alphabetical", start_index=0, max_results=10)
+        queues = self.user.get_queues(expand="@title", sort_order="alphabetical", start_index=0, max_results=10)
         self.assertIsNotNone(queues)
         dump_object(queues)
 
         queues_instant = self.user.get_queues_instant(sort_order="alphabetical", start_index=0, max_results=10)
         self.assertIsNotNone(queues_instant)
         pprint.pprint(queues_instant)
-        q = self.user.get_resource('http://api.netflix.com/users/BQAJAAEDEGhwxQTK0xDSFPwzrZmyjLggDHeoYPZWblNhToImGOz78JQyfW6C2NhvSWsnrjOGcmg./queues/instant/available/70138768')
-        pprint.pprint(q.json)
         for queue in queues_instant['queue']:
-            #q = self.user.get_resource('http://api.netflix.com/users/BQAJAAEDEGhwxQTK0xDSFPwzrZmyjLggDHeoYPZWblNhToImGOz78JQyfW6C2NhvSWsnrjOGcmg./queues/instant/available/70138768')
+            q = self.user.get_resource(queue['id'], data={'expand': '@title'})
             print queue['id']
-            #pprint.pprint(q.json)
-            pass
+            pprint.pprint(q.json)
 
         try:
             queues_disc = self.user.get_queues_disc(sort_order="alphabetical", start_index=0, max_results=10)
