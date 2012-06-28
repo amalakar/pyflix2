@@ -43,4 +43,7 @@ Features
 
 Documentation: http://pyflix2.readthedocs.org/en/latest/index.html
 
+Note: I would like to thank Kirsten Jones for the library http://code.google.com/p/pyflix/
+As pyflix2 was initially inspired by pyflix.
+
 .. _`the repository`: https://github.com/amalakar/pyflix2
