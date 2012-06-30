@@ -18,6 +18,9 @@ Netflix API endpoint to Method Mapping
 
 API
 ---
+.. autodata:: Netflix.EXPANDS
+.. autodata:: Netflix.SORT_ORDER
+.. autodata:: Netflix.RENTAL_HISTORY_TYPE
 
 .. autoclass:: Netflix.NetflixAPIV2
    :inherited-members:
