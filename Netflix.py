@@ -54,19 +54,18 @@ class _NetflixAPI(object):
         # Abstractify this class
         if self.__class__ is _NetflixAPI:
             raise NotImplementedError
-
         if not appname:
             raise NetflixError("appname cannot be null/empty")
         if not consumer_key:
             raise NetflixError("consumer_key cannot be null/empty")
         if not consumer_secret:
             raise NetflixError("consumer_secret cannot be null/empty")
-        self._consumer_name = appname
-        self._consumer_key = consumer_key
-        self._consumer_secret = consumer_secret
+        self._consumer_name = appname.strip()
+        self._consumer_key = consumer_key.strip()
+        self._consumer_secret = consumer_secret.strip()
 
-        OAuthHook.consumer_key = consumer_key
-        OAuthHook.consumer_secret = consumer_secret
+        OAuthHook.consumer_key = self._consumer_key
+        OAuthHook.consumer_secret = self._consumer_secret
         self._logger = logger
 
         oauth_hook = OAuthHook()
@@ -274,9 +273,8 @@ class _NetflixAPI(object):
         """ Returns the user object, which could then be used to make further user specific calls 
 
         url: /users/current
-
-        :param id: Retrieves information about the user whose ``id`` is given. If ``id`` is not given
-            the current user's infomation is retrieved
+        :param user_token: The user token as received using the ``get_access_token()`` method
+        :param user_token_secret: The user token secret as received using the ``get_user_token()`` method
 
         :returns: ``dict`` object containg user information. The return object is different for `v1` and `v2`
         """
@@ -477,10 +475,13 @@ class NetflixAPIV2(_NetflixAPI):
 
 class User:
     def __init__(self, netflix_client, access_token, access_token_secret, id=None):
-        """
+        """Don't use this constructor directly, use :py:meth:`~NetflixAPIV2.get_user()` instead
+
+        :param netflix_client: The Netflix client
         :param access_token: (Optional) User access token obtained using OAuth three legged authentication 
         :param access_token_secret: (Optional) User access token  secret obtained using OAuth 
             three legged authentication 
+        :param id: The user id of the netflix subsriber
         """
 
         if not access_token:
@@ -488,10 +489,12 @@ class User:
         if not access_token_secret:
             raise NetflixError("access_token_secret cannot be null/empty")
 
-        oauth_hook = OAuthHook(access_token, access_token_secret)
         self._netflix_client = netflix_client
+        self._access_token = access_token.strip()
+        self._access_token_secret = access_token_secret.strip()
+        oauth_hook = OAuthHook(self._access_token, self._access_token_secret)
         self._client = requests.session(hooks={'pre_request': oauth_hook})
-        self._access_token = access_token
+
         if not id:
             user = self._request('get', "/users/current").json
             if 'resource' in user:
