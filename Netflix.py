@@ -29,7 +29,7 @@ SORT_ORDER = ["queue_sequence", "date_added", "alphabetical"]
 """ Allowed sort order while retrieveing queues"""
 
 RENTAL_HISTORY_TYPE = ['shipped', 'returned', 'watched']
-""" Allowrd type while retreiving rental_history"""
+""" Allowed type to use while calling :py:meth:`~User.get_rental_history`"""
 
 class NetflixError(Exception):
     """ Error thrown if the netflix api throws http error"""
