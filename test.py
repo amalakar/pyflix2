@@ -14,7 +14,7 @@ class TestNetflixAPIV1(unittest.TestCase):
     def setUp(self):
         config_parser = ConfigParser.ConfigParser()
         config_parser.read(['pyflix.cfg', os.path.expanduser('~/.pyflix.cfg')])
-        self.config = lambda key: config_parser.get('pyflix', key)
+        self.config = lambda key: config_parser.get('pyflix', key).strip()
         self.netflix = NetflixAPIV1( appname=self.config('app_name'), 
                                    consumer_key=self.config('consumer_key'),
                                    consumer_secret=self.config('consumer_secret')) 
@@ -101,7 +101,7 @@ class TestNetflixAPIV2(unittest.TestCase):
     def setUp(self):
         config_parser = ConfigParser.ConfigParser()
         config_parser.read(['pyflix.cfg', os.path.expanduser('~/.pyflix.cfg')])
-        self.config = lambda key: config_parser.get('pyflix', key)
+        self.config = lambda key: config_parser.get('pyflix', key).strip()
         self.netflix = NetflixAPIV2( appname=self.config('app_name'), 
                                    consumer_key=self.config('consumer_key'),
                                    consumer_secret=self.config('consumer_secret'), 
@@ -167,13 +167,13 @@ class TestNetflixAPIV2(unittest.TestCase):
         self.assertIsNotNone(queues)
         dump_object(queues)
 
-        queues_instant = self.user.get_queues_instant(sort_order="alphabetical", start_index=0, max_results=10)
+        queues_instant = self.user.get_queues_instant(sort_order="alphabetical", start_index=0, max_results=2)
         self.assertIsNotNone(queues_instant)
         pprint.pprint(queues_instant)
         for queue in queues_instant['queue']:
-            q = self.user.get_resource(queue['id'], data={'expand': '@title'})
+            q = self.user.get_resource(queue['id'], data={})
             print queue['id']
-            pprint.pprint(q.json)
+            print(q.content)
 
         try:
             queues_disc = self.user.get_queues_disc(sort_order="alphabetical", start_index=0, max_results=10)
