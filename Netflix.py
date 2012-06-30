@@ -28,6 +28,7 @@ EXPANDS = ["@title", "@box_art", "@synopsis", "@short_synopsis", "@format_availa
 SORT_ORDER = ["queue_sequence", "date_added", "alphabetical"]
 """ Allowed sort order while retrieveing queues"""
 
+RENTAL_HISTORY_TYPE = ['shipped', 'returned', 'watched']
 
 
 class NetflixError(Exception):
@@ -167,7 +168,7 @@ class _NetflixAPI(object):
                      'start_index': start_index, 'max_results': max_results}
         if filter:
             data['filters'] = NETFLIX_FILTER[filter]
-        if expand and EXPANDS.index(expand):
+        if expand and EXPANDS.index(expand) >= 0:
             data['expand'] = expand
         return self._request("get", url_path, data).json
 
@@ -225,7 +226,7 @@ class _NetflixAPI(object):
 
         if id.startswith('http'):
             url=id
-            if category and EXPANDS.index("@" + category):
+            if category and EXPANDS.index("@" + category) >= 0:
                 url = "%s/%s" % (url, category)
             return self._request('get', url).json
         else:
@@ -663,27 +664,30 @@ class User:
 
     def _request_queue(self, method, queue_path, expand=None, sort_order=None, start_index=None, 
                    max_results=None, updated_min=None):
-        data = {'start_index' : start_index, "max_results": max_results, "updated_min": updated_min}
+        data = {'start_index' : start_index, 'max_results': max_results, 'updated_min': updated_min}
         if sort_order and SORT_ORDER.index(sort_order):
             data['sort'] = sort_order
-        if expand and expand in EXPANDS:
+        if expand and EXPANDS.index(expand) >= 0:
             data['expand'] = expand
         return self._request(method, queue_path, data=data).json
 
     def get_rental_history(self, type=None, start_index=None, max_results=None, updated_min=None):
         """ Get a list of titles that reflect a subscriber's viewing history
+            Note: This API to be obsolete on 15th Sept, 2012 http://goo.gl/AYOlt
 
         url: /users/userID/rental_history
 
+        :param type: type of rental history, "watched", "shipped" etc, see :py:data:`RENTAL_HISTORY_TYPE`
         :param start_index: The zero-based offset into the results for the query
         :param max_results: Maximum number of results you want.
         :param updated_min: Only results whose updated time is greater than this would be returned. 
             Unix epoch time format or RFC 3339 format
         """
-        url_path = '/users/' + self.id + '/rental_history'
-        if type:
-            url_path += '/watched'
-        return self._request('get', url_path).json
+        url_path = '/users/%s/rental_history' % self.id
+        if type and RENTAL_HISTORY_TYPE.index(type) >= 0:
+            url_path += '/%s' % type
+        data = {'start_index' : start_index, 'max_results': max_results, 'updated_min': updated_min}
+        return self._request('get', url_path, data=data).json
 
 
     def get_rating(self, title_refs):

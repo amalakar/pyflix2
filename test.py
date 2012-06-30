@@ -5,8 +5,6 @@ from pprint import pprint
 from Netflix import *
 import ConfigParser
 
-MOVIE_TITLE = "Foo Fighters"
-
 DUMP_OBJECTS = False 
 
 class TestNetflixAPIV1(unittest.TestCase):
@@ -192,13 +190,27 @@ class TestNetflixAPIV2(unittest.TestCase):
         dump_object(queues_is)
 
     def test_user_rental_history(self):
-        rental_history = self.user.get_rental_history()
+        rental_history = self.user.get_rental_history(max_results=2)
         self.assertIsNotNone(rental_history)
+        self.assertEqual(int(rental_history['results_per_page']), 2)
         dump_object(rental_history)
 
-        rental_history_watched = self.user.get_rental_history('watched')
+        rental_history_watched = self.user.get_rental_history('watched', start_index=0, max_results=2)
+        self.assertIsNotNone(rental_history_watched)
+        self.assertEqual(int(rental_history_watched['results_per_page']), 2)
+        dump_object(rental_history_watched)
+
+        rental_history_watched = self.user.get_rental_history('shipped')
         self.assertIsNotNone(rental_history_watched)
         dump_object(rental_history_watched)
+
+        try:
+            self.user.get_rental_history('bad_type')
+            self.assertTrue(False, msg="ValueError exception should have been thrown for incorrect type")
+        except ValueError as e:
+            dump_object(e)
+            self.assertIsNotNone(e)
+
 
     def test_user_ratings(self):
         ratings = self.user.get_rating(['http://api.netflix.com/catalog/titles/programs/144409/70116820'])
