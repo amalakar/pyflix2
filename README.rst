@@ -14,6 +14,8 @@ Example
 
 ::
 
+    from pyflix2 import *
+
     netflix = NetflixAPIV2( 'appname', 'key', 'shared_secret')
     movies = netflix.title_autocomplete('Terminator', filter='instant')
     for title in movies['autocomplete']['title']:
@@ -26,8 +28,8 @@ Example
 
 Note
     - Here ``appname``, ``key`` and ``shared_secret`` needs to be obtained from: http://developer.netflix.com/apps/mykeys.
-    - The ``access_token``, ``access_token_secret`` needs to be obtained programmatically using ``NetflixAPIV2.get_request_token``
-      and ``~NetflixAPIV2.get_access_token``
+    - The ``access_token``, ``access_token_secret`` needs to be obtained programmatically using ``get_request_token``
+      and ``get_access_token``
 
 
 Features

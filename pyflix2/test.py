@@ -2,7 +2,7 @@
 import unittest, os
 import simplejson
 from pprint import pprint
-from Netflix import *
+from pyflix2 import *
 import ConfigParser
 
 DUMP_OBJECTS = False 
@@ -11,8 +11,8 @@ class TestNetflixAPIV1(unittest.TestCase):
 
     def setUp(self):
         config_parser = ConfigParser.ConfigParser()
-        config_parser.read(['pyflix.cfg', os.path.expanduser('~/.pyflix.cfg')])
-        self.config = lambda key: config_parser.get('pyflix', key)
+        config_parser.read(['pyflix2.cfg', os.path.expanduser('~/.pyflix2.cfg')])
+        self.config = lambda key: config_parser.get('pyflix2', key)
         self.netflix = NetflixAPIV1( appname=self.config('app_name'), 
                                    consumer_key=self.config('consumer_key'),
                                    consumer_secret=self.config('consumer_secret')) 
@@ -98,8 +98,8 @@ class TestNetflixAPIV2(unittest.TestCase):
 
     def setUp(self):
         config_parser = ConfigParser.ConfigParser()
-        config_parser.read(['pyflix.cfg', os.path.expanduser('~/.pyflix.cfg')])
-        self.config = lambda key: config_parser.get('pyflix', key)
+        config_parser.read(['pyflix2.cfg', os.path.expanduser('~/.pyflix2.cfg')])
+        self.config = lambda key: config_parser.get('pyflix2', key)
         self.netflix = NetflixAPIV2( appname=self.config('app_name'), 
                                    consumer_key=self.config('consumer_key'),
                                    consumer_secret=self.config('consumer_secret'), 

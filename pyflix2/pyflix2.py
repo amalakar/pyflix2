@@ -209,6 +209,9 @@ class _NetflixAPI(object):
             data['filters'] = NETFLIX_FILTER[filter]
         return self._request("get", url_path, data).json
 
+    def get_movie_by_title(self, movie_title):
+        """ Returns the first movie that matches the title"""
+
     def get_title(self, id,  category=None):
         """ Retrieve details for specific catalog title
 

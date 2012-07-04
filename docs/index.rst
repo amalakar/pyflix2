@@ -6,10 +6,10 @@ User Guide
 
 .. default-domain:: py
 
-All of pyflix2's functionality can be access via the classes  :py:class:`~Netflix.NetflixAPIV1` or :py:class:`~Netflix.NetflixAPIV2` based on
-the version you want to use and :py:class:`~Netflix.User`.
+All of pyflix2's functionality can be access via the classes  :py:class:`~pyflix2.NetflixAPIV1` or :py:class:`~pyflix2.NetflixAPIV2` based on
+the version you want to use and :py:class:`~pyflix2.User`.
 
-.. currentmodule:: Netflix
+.. currentmodule:: pyflix2
 
 Netflix API endpoint to Method Mapping
 --------------------------------------
@@ -18,11 +18,11 @@ Netflix API endpoint to Method Mapping
 
 API
 ---
-.. autodata:: Netflix.EXPANDS
-.. autodata:: Netflix.SORT_ORDER
-.. autodata:: Netflix.RENTAL_HISTORY_TYPE
+.. autodata:: pyflix2.EXPANDS
+.. autodata:: pyflix2.SORT_ORDER
+.. autodata:: pyflix2.RENTAL_HISTORY_TYPE
 
-.. autoclass:: Netflix.NetflixAPIV2
+.. autoclass:: pyflix2.NetflixAPIV2
    :inherited-members:
    :members:
    :undoc-members:
@@ -32,7 +32,7 @@ API
 
 ---------------------
 
-.. autoclass:: Netflix.NetflixAPIV1
+.. autoclass:: pyflix2.NetflixAPIV1
    :inherited-members:
    :members:
    :undoc-members:
@@ -41,7 +41,7 @@ API
 
 ---------------------
 
-.. autoclass:: Netflix.User
+.. autoclass:: pyflix2.User
    :inherited-members:
    :members:
    :undoc-members:
@@ -51,4 +51,4 @@ API
 
 ---------------------
 
-.. autoexception:: Netflix.NetflixError
+.. autoexception:: pyflix2.NetflixError

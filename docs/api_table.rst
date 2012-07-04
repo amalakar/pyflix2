@@ -10,6 +10,7 @@
     "*/catalog/people/person_id*", "get_person(*id*)", ":py:meth:`~NetflixAPIV2.get_person`"
     "*/users/current*", "get_user(*user_token, user_token_secret*)", ":py:meth:`~NetflixAPIV2.get_user`"
     "*/catalog/titles/autocomplete*", "title_autocomplete(*term, filter=None, start_index=None, max_results=None*)", ":py:meth:`~NetflixAPIV2.title_autocomplete`"
+    "**", "get_movie_by_title(*movie_title*)", ":py:meth:`~NetflixAPIV2.get_movie_by_title`"
 .. csv-table:: User api
     :header: "URL", "Signature", "More"
 

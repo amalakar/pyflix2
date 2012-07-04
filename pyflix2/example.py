@@ -1,6 +1,6 @@
 # Sample code to use the Netflix python client
 
-from Netflix import *
+from pyflix2 import *
 import ConfigParser
 import argparse
 import time 
@@ -115,8 +115,8 @@ if __name__ == '__main__':
     verbose = args.verbose
 
     config_parser = ConfigParser.ConfigParser()
-    config_parser.read(['pyflix.cfg', os.path.expanduser('~/.pyflix.cfg')])
-    config = lambda key: config_parser.get('pyflix', key).strip()
+    config_parser.read(['pyflix2.cfg', os.path.expanduser('~/.pyflix2.cfg')])
+    config = lambda key: config_parser.get('pyflix2', key).strip()
     netflix = NetflixAPIV2( appname=config('app_name'), 
                                    consumer_key=config('consumer_key'),
                                    consumer_secret=config('consumer_secret'), 
