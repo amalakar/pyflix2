@@ -46,9 +46,11 @@ Note
 Commandline
 -----------
 ::
+
     $ python -mpyflix2 -s 'the matrix' -x 
 
 Or see help::
+
     $ python -mpyflix2 -h
 
 
