@@ -9,6 +9,17 @@ Netflix provides REST interfaces to access it's catalog and various user data.
 This module exposes easy to use object oriented interfaces that is inteded to make it even easier
 for python programmers to use.
 
+Install
+-------
+Installing requests is simple with `pip <http://www.pip-installer.org/>`_::
+
+    $ pip install pyflix2
+
+or, with `easy_install <http://pypi.python.org/pypi/setuptools>`_::
+
+    $ easy_install pyflix2
+
+
 Example
 -------
 
@@ -30,6 +41,15 @@ Note
     - Here ``appname``, ``key`` and ``shared_secret`` needs to be obtained from: http://developer.netflix.com/apps/mykeys.
     - The ``access_token``, ``access_token_secret`` needs to be obtained programmatically using ``get_request_token``
       and ``get_access_token``
+
+
+Commandline
+-----------
+::
+    $ python -mpyflix2 -s 'the matrix' -x 
+
+Or see help::
+    $ python -mpyflix2 -h
 
 
 Features

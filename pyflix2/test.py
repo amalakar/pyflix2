@@ -43,6 +43,10 @@ class TestNetflixAPIV1(unittest.TestCase):
         person = self.netflix.get_person(people['people']['person'][0]['id'])
         self.assertIsNotNone(person)
 
+        the_matrix = self.netflix.get_movie_by_title('the matrix')
+        self.assertIsNotNone(the_matrix)
+        dump_object(the_matrix)
+
     def test_user_functions(self):
         self.assertIsNotNone(self.user)
         #dump_object(self.user)
@@ -141,6 +145,10 @@ class TestNetflixAPIV2(unittest.TestCase):
         if autocomplete_titles_disc['autocomplete']:
             disc_count = len(autocomplete_titles_disc['autocomplete']['title'])
         self.assertNotEqual(instant_count, disc_count)
+
+        the_matrix = self.netflix.get_movie_by_title('the matrix')
+        self.assertIsNotNone(the_matrix)
+        dump_object(the_matrix)
 
     def test_user_details(self):
         self.assertIsNotNone(self.user)

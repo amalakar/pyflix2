@@ -209,8 +209,8 @@ class _NetflixAPI(object):
             data['filters'] = NETFLIX_FILTER[filter]
         return self._request("get", url_path, data).json
 
-    def get_movie_by_title(self, movie_title):
-        """ Returns the first movie that matches the title"""
+
+
 
     def get_title(self, id,  category=None):
         """ Retrieve details for specific catalog title
@@ -411,6 +411,19 @@ class NetflixAPIV1(_NetflixAPI):
         """
         return super(NetflixAPIV1, self).title_autocomplete(term, start_index=start_index,
                                                   max_results=max_results)
+    def get_movie_by_title(self, movie_title):
+        """ Returns the first movie that matches the title
+
+        :param movie_title: The exact movie name
+        :returns: the movie object matching the title"""
+
+        search_result = self.search_titles(movie_title)
+        for movie in search_result['catalog_titles']['catalog_title']:
+            title = movie['title']['regular']
+            if movie_title.lower() == title.lower():
+                self._log("Found movie: '%s' id: '%s'" % (title, movie['id']))
+                return movie
+        return None
 
 
 class NetflixAPIV2(_NetflixAPI):
@@ -474,6 +487,20 @@ class NetflixAPIV2(_NetflixAPI):
         """
         return super(NetflixAPIV2, self).title_autocomplete(term, filter=filter, start_index=start_index,
                                                   max_results = max_results)
+    def get_movie_by_title(self, movie_title, filter=None):
+        """ Returns the first movie that matches the title
+
+        :param movie_title: The exact movie name
+        :param filter: The filter
+        :returns: the movie object matching the title"""
+
+        search_result = self.search_titles(movie_title, filter=filter)
+        for movie in search_result['catalog']:
+            title = movie['title']
+            if movie_title.lower() == title.lower():
+                self._log("Found movie: '%s' id: '%s'" % (title, movie['id']))
+                return movie
+        return None
 
 
 class User:

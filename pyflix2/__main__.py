@@ -60,14 +60,10 @@ def autocomplete_search(netflix, term, partial_match=True, filter=None):
 
     search_result = netflix.search_titles(user_movie_title, filter=filter)
 
-    movie_id = None
-    for movie in search_result['catalog']:
-        title = movie['title']
-        if user_movie_title.lower() == title.lower():
-            movie_id = movie['id']
-            log("Found movie: %s" % title, True) 
+    movie = netflix.get_movie_by_title(user_movie_title)
 
-    if movie_id:
+    if movie:
+        movie_id = movie['id']
         movie_details = netflix.get_title(movie_id)
         movie_formats = netflix.get_title(movie_id, category="format_availability")['delivery_formats']
         print "\nAverage Rating: ", movie_details['catalog_title']['average_rating']
@@ -97,7 +93,7 @@ def autocomplete_search(netflix, term, partial_match=True, filter=None):
 
 
 
-if __name__ == '__main__':  
+def main():
     auth_required = False
 
     parser = argparse.ArgumentParser(description='Command line utility for interacting with Netflix')
@@ -138,4 +134,7 @@ if __name__ == '__main__':
 
         autocomplete_search(netflix, args.search, partial_match=args.exact_match, filter=filter) 
 
+    return 1
 
+if __name__ == "__main__":
+    main()

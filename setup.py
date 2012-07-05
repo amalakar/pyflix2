@@ -8,7 +8,8 @@ setup(
     name="pyflix2",
     version=pyflix2.__version__,
     description="python module for accessing Netflix REST webservice",
-    long_description=open('README.rst').read(),
+    long_description=open('README.rst').read() + '\n\n' +
+                             open('HISTORY.rst').read(),
     author=pyflix2.__author__,
     author_email='amalakar@gmail.com',
     url="http://pyflix2.readthedocs.org/",
