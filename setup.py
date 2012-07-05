@@ -7,7 +7,7 @@ import pyflix2
 setup(
     name="pyflix2",
     version=pyflix2.__version__,
-    description="python module for accessing Netflix REST webservice",
+    description="python module for accessing Netflix REST webservice, both V1 and V2",
     long_description=open('README.rst').read() + '\n\n' +
                              open('HISTORY.rst').read(),
     author=pyflix2.__author__,
