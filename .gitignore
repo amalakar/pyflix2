@@ -1,0 +1,7 @@
+*.pyc
+build
+dist
+docs/_build
+pyflix2.egg-info
+docs/_static/
+
