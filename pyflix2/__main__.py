@@ -120,7 +120,7 @@ def main():
 
 
     if args.authorize:
-        user = get_authorization(netflix_client, config('app_name'))
+        user = get_authorization(netflix, config('app_name'))
     elif auth_required:
         user = netflix.get_user(config('access_token'), config('access_token_secret'))
 
