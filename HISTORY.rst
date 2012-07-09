@@ -2,6 +2,10 @@
 
 History
 -------
+0.1.3 (under development)
++++++++++++++++++++++++++
+- Fixed access token retrival code in __main__.py
+
 0.1.2 (2012-07-06)
 +++++++++++++++++++
 - Issue #5: Fixed circular dependency in setup.py
