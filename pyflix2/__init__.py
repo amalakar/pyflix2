@@ -1,5 +1,5 @@
 __title__ = 'pyflix2'
-__version__ = '0.1.2'
+__version__ = '0.1.3'
 __build__ = __version__
 __author__ = 'Arup Malakar'
 __license__ = 'BSD'

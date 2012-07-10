@@ -2,9 +2,10 @@
 
 History
 -------
-0.1.3 (under development)
-+++++++++++++++++++++++++
+0.1.3 (2012-07-09)
+++++++++++++++++++
 - Fixed access token retrival code in __main__.py
+- Fixed typo in sample config file
 
 0.1.2 (2012-07-06)
 +++++++++++++++++++
