@@ -12,7 +12,7 @@ from urlparse import urlparse, parse_qs, parse_qsl, urlunparse
 import urllib
 import json
 
-__version__ = "0.1.1"
+__version__ = "0.1.4"
 
 BASE_URL= 'http://api.netflix.com'
 REQUEST_TOKEN_URL = 'http://api.netflix.com/oauth/request_token'
