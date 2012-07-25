@@ -28,8 +28,8 @@ def get_authorization(netflix, appname):
 
     verification_code = raw_input('Please enter Verifier Code: ')
     (access_token, access_token_secret) = netflix.get_access_token(request_token, request_token_secret, verification_code)
-    print "now put this access_token / access_token_secret in ~/.pyflix.cfg so you don't have to re-authorize again:\n\n \
-            access_token = %s\naccess_token_secret = %s\n\n" % (access_token, access_token_secret)
+    print "now put this access_token / access_token_secret in ~/.pyflix2.cfg so you don't have to re-authorize again:\n\n" + \
+            "access_token = %s\naccess_token_secret = %s\n\n" % (access_token, access_token_secret)
 
     return netflix.get_user(access_token, access_token_secret)
 
