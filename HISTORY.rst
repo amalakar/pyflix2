@@ -2,6 +2,10 @@
 
 History
 -------
+0.1.4 ()
+++++++++++++++++++
+- Issue #6: Add support for downloading full catalog in lib as well as in command line 
+
 0.1.3 (2012-07-09)
 ++++++++++++++++++
 - Fixed access token retrival code in __main__.py

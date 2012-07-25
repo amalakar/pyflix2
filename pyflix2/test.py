@@ -5,7 +5,7 @@ from pprint import pprint
 from pyflix2 import *
 import ConfigParser
 
-DUMP_OBJECTS = False 
+DUMP_OBJECTS = True
 
 class TestNetflixAPIV1(unittest.TestCase):
 
@@ -34,10 +34,6 @@ class TestNetflixAPIV1(unittest.TestCase):
         autocomplete_titles = self.netflix.title_autocomplete("matrix")
         for title in autocomplete_titles[u'autocomplete'][u'autocomplete_item']:
             self.assertIn('matrix', title['title']['short'].lower())
-
-        # Following call downloads the whole catalog so it is bit of heavy-lifting
-        # catalog = self.netflix.get_catalog()
-
         people = self.netflix.search_people('Flip Wilson', max_results=5)
         self.assertIsNotNone(people['people'])
         person = self.netflix.get_person(people['people']['person'][0]['id'])
@@ -46,6 +42,13 @@ class TestNetflixAPIV1(unittest.TestCase):
         the_matrix = self.netflix.get_movie_by_title('the matrix')
         self.assertIsNotNone(the_matrix)
         dump_object(the_matrix)
+
+
+    def test_full_catalog(self):
+        # Following call downloads the whole catalog so it is bit of heavy-lifting
+        catalog = self.netflix.get_catalog()
+        self.assertIsNotNone(catalog)
+
 
     def test_user_functions(self):
         self.assertIsNotNone(self.user)
@@ -150,6 +153,11 @@ class TestNetflixAPIV2(unittest.TestCase):
         self.assertIsNotNone(the_matrix)
         dump_object(the_matrix)
 
+    def test_full_catalog(self):
+        # Following call downloads the whole catalog so it is bit of heavy-lifting
+        catalog = self.netflix.get_catalog(False)
+        self.assertIsNotNone(catalog)
+
     def test_user_details(self):
         self.assertIsNotNone(self.user)
         #dump_object(dir(self.user))
@@ -161,6 +169,13 @@ class TestNetflixAPIV2(unittest.TestCase):
     def test_user_feeds(self):
         feeds = self.user.get_feeds()
         self.assertIsNotNone(feeds)
+        for item in feeds['resource']['link']:
+            print "%s => %s" % (item['title'], item['href'])
+            try:
+                #pass
+                dump_object(self.user.get_resource(item['href']))
+            except NetflixError as e:
+                pprint.pprint(e)
         #dump_object(feeds)
 
     def test_user_user_states(self):
@@ -198,10 +213,16 @@ class TestNetflixAPIV2(unittest.TestCase):
         dump_object(queues_is)
 
     def test_user_rental_history(self):
-        rental_history = self.user.get_rental_history(max_results=2)
+        rental_history = self.user.get_rental_history(max_results=25)
         self.assertIsNotNone(rental_history)
-        self.assertEqual(int(rental_history['results_per_page']), 2)
         dump_object(rental_history)
+        self.assertEqual(int(rental_history['results_per_page']), 25)
+        movie_ids = []
+        for movie in rental_history['rental_history']:
+            movie_ids.append(movie['id'])
+
+        ratings = self.user.get_rating(movie_ids)
+        dump_object(ratings)
 
         rental_history_watched = self.user.get_rental_history('watched', start_index=0, max_results=2)
         self.assertIsNotNone(rental_history_watched)

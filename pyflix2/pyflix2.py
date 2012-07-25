@@ -171,18 +171,7 @@ class _NetflixAPI(object):
             data['expand'] = expand
         return self._request("get", url_path, data).json
 
-    def get_catalog(self):
-        """Retrieve a complete index of all instant-watch titles in the Netflix catalog
-
-        url: /catalog/titles/index
-
-        :Returns:
-            Returns an iter object which can be written to disk etc
-        """
-        url_path = '/catalog/titles/index'
-        r = self._request("get", url_path, headers={ 'Accept-Encoding': 'gzip'})
-        return r.iter_content
-
+  
     def title_autocomplete(self, term, filter=None, start_index=None, max_results=None):
         """ Searches the catalog for  for movies and television series whose "short" 
         titles match a partial search text. You can then pass the title names that 
@@ -341,7 +330,7 @@ class _NetflixAPI(object):
         if not client:
             client = self._client
 
-        r = client.request(method, url, data=data, config=config, headers=headers)
+        r = client.request(method, url, data=data, config=config, headers=headers, allow_redirects=True)
         self._log((r.request.method, r.url, r.status_code))
         if(r.status_code < 200 or r.status_code >= 300):
             error = {}
@@ -425,6 +414,17 @@ class NetflixAPIV1(_NetflixAPI):
                 return movie
         return None
 
+    def get_catalog(self):
+        """Retrieve a complete index of all instant-watch titles in the Netflix catalog
+
+        url: /catalog/titles/index
+
+        :Returns:
+            Returns an iter object which can be written to disk etc
+        """
+        url_path = '/catalog/titles/index'
+        r = self._request("get", url_path, headers={'Accept-Encoding': 'gzip'}, data={'output': None})
+        return r
 
 class NetflixAPIV2(_NetflixAPI):
     """ Provides functional interface to Netflix V2 REST api"""
@@ -501,6 +501,18 @@ class NetflixAPIV2(_NetflixAPI):
                 self._log("Found movie: '%s' id: '%s'" % (title, movie['id']))
                 return movie
         return None
+
+    def get_catalog(self):
+        """Retrieve a complete index of all instant-watch titles in the Netflix catalog
+
+        url: /catalog/titles/full
+
+        :Returns:
+            Returns an iter object which can be written to disk etc
+        """
+        url_path = '/catalog/titles/full'
+        r = self._request("get", url_path, headers={'Accept-Encoding': 'gzip'}, data={'output': None})
+        return r
 
 
 class User:

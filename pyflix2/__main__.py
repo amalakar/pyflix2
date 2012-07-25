@@ -13,7 +13,7 @@ verbose = False
 
 def log(msg, mandatory=False):
     if verbose or mandatory:
-        print msg 
+        print msg
 
 def get_time(time):
     return strftime("%d %b %Y", gmtime(int(time)))
@@ -92,13 +92,20 @@ def autocomplete_search(netflix, term, partial_match=True, filter=None):
         return
 
 
+def print_full_catalog(netflix):
+    full_catalog = netflix.get_catalog()
+    for line in full_catalog.iter_content():
+        sys.stdout.write(line)
+
 
 def main():
-    auth_required = False
-
     parser = argparse.ArgumentParser(description='Command line utility for interacting with Netflix')
+
     parser.add_argument("-v", "--verbose", action="store_true",
                                             help="Increse verbosity")
+
+    parser.add_argument("-f", "--full-catalog", action="store_true", 
+                                            help="Download the whole catalog of netflix")
     parser.add_argument("-a", "--authorize", action="store_true", 
                         help="Get access token/access token secret for the user")
     parser.add_argument("-s", "--search", type=str, help="Search for a movie title")
@@ -113,18 +120,16 @@ def main():
     config_parser = ConfigParser.ConfigParser()
     config_parser.read(['pyflix2.cfg', os.path.expanduser('~/.pyflix2.cfg')])
     config = lambda key: config_parser.get('pyflix2', key).strip()
-    netflix = NetflixAPIV2( appname=config('app_name'), 
+    netflix = NetflixAPIV2( appname=config('app_name'),
                                    consumer_key=config('consumer_key'),
-                                   consumer_secret=config('consumer_secret'), 
+                                   consumer_secret=config('consumer_secret'),
                                    )
 
+    #user = netflix.get_user(config('access_token'), config('access_token_secret'))
 
     if args.authorize:
         user = get_authorization(netflix, config('app_name'))
-    elif auth_required:
-        user = netflix.get_user(config('access_token'), config('access_token_secret'))
-
-    if args.search:
+    elif args.search:
         if args.disc_only:
             filter = 'disc'
         elif args.instant_only:
@@ -133,6 +138,10 @@ def main():
             filter = None
 
         autocomplete_search(netflix, args.search, partial_match=args.exact_match, filter=filter) 
+    elif args.full_catalog:
+        print_full_catalog(netflix)
+    else:
+        parser.print_help()
 
     return 1
 
