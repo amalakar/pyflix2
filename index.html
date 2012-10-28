@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8' />
+    <meta http-equiv="X-UA-Compatible" content="chrome=1" />
+    <meta name="description" content="Pyflix2 : Python module for accessing Netflix APIs  " />
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>Pyflix2</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/amalakar/pyflix2">View on GitHub</a>
+
+          <h1 id="project_title">Pyflix2</h1>
+          <h2 id="project_tagline">Python module for accessing Netflix APIs  </h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/amalakar/pyflix2/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/amalakar/pyflix2/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <h1>pyflix2: python module for accessing Netflix webservice</h1>
+
+<h2>Introduction</h2>
+
+<p><em>pyflix2</em> is a <code>BSD licensed</code> python module for accessing netflix API (both v1 and v2)
+Netflix provides REST interfaces to access it's catalog and various user data.
+This module exposes easy to use object oriented interfaces that is inteded to make it even easier
+for python programmers to use.</p>
+
+<h2>Install</h2>
+
+<p>Installing requests is simple with <code>pip &lt;http://www.pip-installer.org/&gt;</code>_::</p>
+
+<pre><code>$ pip install pyflix2
+</code></pre>
+
+<p>or, with <code>easy_install &lt;http://pypi.python.org/pypi/setuptools&gt;</code>_::</p>
+
+<pre><code>$ easy_install pyflix2
+</code></pre>
+
+<h2>Example</h2>
+
+<p>::</p>
+
+<pre><code>from pyflix2 import *
+
+netflix = NetflixAPIV2( 'appname', 'key', 'shared_secret')
+movies = netflix.title_autocomplete('Terminator', filter='instant')
+for title in movies['autocomplete']['title']:
+    print title
+
+user = netflix.get_user('access_token', 'access_token_secret')
+reco = user.get_reccomendations()
+for movie in reco['recommendations']:
+    print movie['title']['regular']
+</code></pre>
+
+<p>Note
+    - Here <code>appname</code>, <code>key</code> and <code>shared_secret</code> needs to be obtained from: <a href="http://developer.netflix.com/apps/mykeys">http://developer.netflix.com/apps/mykeys</a>.
+    - The <code>access_token</code>, <code>access_token_secret</code> needs to be obtained programmatically using <code>get_request_token</code>
+      and <code>get_access_token</code></p>
+
+<h2>Commandline</h2>
+
+<p>::</p>
+
+<pre><code>$ python -mpyflix2 -s 'the matrix' -x 
+</code></pre>
+
+<p>Or see help::</p>
+
+<pre><code>$ python -mpyflix2 -h
+</code></pre>
+
+<h2>Features</h2>
+
+<ul>
+<li>Supports both V1 and V2 of netflix REST API</li>
+<li>Supports both out-of-bound (oauth 1.0a) and  vanila three legged oauth auhentication</li>
+<li>Provides easy to use and well documented functional interface for all the API exposed by netflix</li>
+<li>Throws Exception for all kinds of error situation making it easier to integrate with other program</li>
+<li>V1 and V2 APIs are exposed using different classes, so version specific features can be used easily</li>
+<li>Internally uses <code>Requests &lt;https://github.com/kennethreitz/requests&gt;</code>_ for making HTTP calls</li>
+<li>Want any new feature? please <code>file a feature request &lt;https://github.com/amalakar/pyflix2/issues/new&gt;</code>_</li>
+</ul><p>Documentation: <a href="http://pyflix2.readthedocs.org/en/latest/index.html">http://pyflix2.readthedocs.org/en/latest/index.html</a></p>
+
+<p>Note: I would like to thank Kirsten Jones for the library <a href="http://code.google.com/p/pyflix/">http://code.google.com/p/pyflix/</a>
+As pyflix2 was initially inspired by pyflix.</p>
+
+<p>.. _<code>the repository</code>: <a href="https://github.com/amalakar/pyflix2">https://github.com/amalakar/pyflix2</a></p>
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">Pyflix2 maintained by <a href="https://github.com/amalakar">amalakar</a></p>
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+
+  </body>
+</html>
