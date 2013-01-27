@@ -71,3 +71,8 @@ Note: I would like to thank Kirsten Jones for the library http://code.google.com
 As pyflix2 was initially inspired by pyflix.
 
 .. _`the repository`: https://github.com/amalakar/pyflix2
+
+Requirements
+------------
+- Requires ``requests`` module minimum ``v1.1.0``
+- Install latest version of requests-oauthlib: ``pip install -U git+git://github.com/requests/requests-oauthlib.git``
