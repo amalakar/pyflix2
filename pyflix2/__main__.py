@@ -58,7 +58,7 @@ def autocomplete_search(netflix, term, partial_match=True, filter=None):
         # Otherwise we know the exact movie name
         user_movie_title = term
 
-    search_result = netflix.search_titles(user_movie_title, filter=filter)
+#    search_result = netflix.search_titles(user_movie_title, filter=filter)
 
     movie = netflix.get_movie_by_title(user_movie_title)
 

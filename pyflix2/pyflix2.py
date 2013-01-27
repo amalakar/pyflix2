@@ -14,12 +14,14 @@ import json
 
 __version__ = "0.1.4"
 
-BASE_URL= 'http://api.netflix.com'
-REQUEST_TOKEN_URL = 'http://api.netflix.com/oauth/request_token'
-ACCESS_TOKEN_URL = 'http://api.netflix.com/oauth/access_token'
+BASE_URL= 'http://api-public.netflix.com'
+AUTH_BASE_URL = BASE_URL 
+
+REQUEST_TOKEN_URL = AUTH_BASE_URL + '/oauth/request_token'
+ACCESS_TOKEN_URL = AUTH_BASE_URL + '/oauth/access_token'
 AUTHORIZATION_URL = 'https://api-user.netflix.com/oauth/authenticate'
-NETFLIX_FILTER = {'disc': 'http://api.netflix.com/categories/title_formats/disc',
-                  'instant': 'http://api.netflix.com/categories/title_formats/instant'}
+NETFLIX_FILTER = {'disc': BASE_URL + '/categories/title_formats/disc',
+                  'instant': BASE_URL + '/categories/title_formats/instant'}
 EXPANDS = ["@title", "@box_art", "@synopsis", "@short_synopsis", "@format_availability", "@screen_formats",
           "@cast", "@directors", "@languages_and_audio", "@awards", "@similars", "@bonus_materials",
           "@seasons", "@episodes", "@discs"]
@@ -33,6 +35,11 @@ RENTAL_HISTORY_TYPE = ['shipped', 'returned', 'watched']
 
 class NetflixError(Exception):
     """ Error thrown if the netflix api throws http error"""
+    pass
+
+
+class NetflixAuthRequiredError(Exception):
+    """ Error thrown if authorization is required"""
     pass
 
 
@@ -94,7 +101,7 @@ class _NetflixAPI(object):
             data = {'oauth_callback': 'oob'}
         else:
             data = {}
-        response = client.post(REQUEST_TOKEN_URL, data=data)
+        response = client.post(REQUEST_TOKEN_URL, data=data, allow_redirects=True)
         response = parse_qs(response.content)
         request_token = response['oauth_token'][0]
         request_secret = response['oauth_token_secret'][0]
@@ -108,7 +115,7 @@ class _NetflixAPI(object):
         params = {'application_name': self._consumer_name,
                     'oauth_consumer_key': self._consumer_key}
         auth_url = self._append_param(response['login_url'][0], params)
-        return (request_token, request_secret, auth_url )
+        return request_token, request_secret, auth_url
 
     def get_access_token(self, request_token, request_token_secret, oauth_verification_code = None):
         """Obtains the access token/secret, given:
@@ -138,7 +145,7 @@ class _NetflixAPI(object):
         response = client.post(ACCESS_TOKEN_URL, params)
 
         response = parse_qs(response.content)
-        return (response['oauth_token'][0], response['oauth_token_secret'][0])
+        return response['oauth_token'][0], response['oauth_token_secret'][0]
 
     def search_titles(self, term, filter=None, expand=None, start_index=None, max_results=None):
         """Use the catalog titles resource to search the netflix movie catalog(includes all medium)
@@ -309,7 +316,7 @@ class _NetflixAPI(object):
     def _request(self, method, url, data={}, headers={}, client=None):
         """
         """
-        if(self._api_version == 2.0):
+        if self._api_version == 2.0:
             data['v'] = 2.0
 
         if not data or 'output' not in data:
@@ -330,9 +337,13 @@ class _NetflixAPI(object):
         if not client:
             client = self._client
 
-        r = client.request(method, url, data=data, config=config, headers=headers, allow_redirects=True)
+        if method is "get":
+            r = client.request(method, url, params=data, config=config, headers=headers, allow_redirects=True)
+        else:
+            r = client.request(method, url, data=data, config=config, headers=headers, allow_redirects=True)
+
         self._log((r.request.method, r.url, r.status_code))
-        if(r.status_code < 200 or r.status_code >= 300):
+        if r.status_code < 200 or r.status_code >= 300:
             error = {}
             try:
                 error = json.loads(r.content or r.text)
@@ -645,8 +656,7 @@ class User:
             response includes a new ETag value that you can then use in subsequent requests.
         """
         data = {'title_ref': title_ref, 'position': position, 'etag': etag}
-        return self._request_queue("post", '/users/%s/queues/instant' % self.id,
-                          sort_order, None, start_index, max_results, updated_min)
+        return self._request_queue("post", '/users/%s/queues/instant' % self.id)
 
     def get_resource(self, url, data={}):
         return self._request("get", url, data=data)
@@ -795,7 +805,7 @@ class User:
             data['title_refs'] =  ','.join(title_refs)
         return self._request(method, url_path, data=data).json
 
-    def get_reccomendations(self, start_index=None, max_results=None):
+    def get_recommendations(self, start_index=None, max_results=None):
         """Get Netflix's catalog title recommendations for a subscriber, based on a subscriber's viewing history.
         url: /users/userID/recommendations
 
