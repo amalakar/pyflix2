@@ -8,6 +8,12 @@ History
 - Issue #8: Incorporate netflix api change to api-public.netflix.com
 - Issue #9: Update codebase to work with requests v1.1.0
 
+Backward incompatible changes
+-----------------------------
+- ``get_user`` api signature has changed (require one more parameter ``user_id``)
+- Addition of ``user_id`` in ``~/.pyflix.cfg``
+- ``get_access_token`` returns additional ``user_id``
+
 0.1.3 (2012-07-09)
 ++++++++++++++++++
 - Fixed access token retrival code in __main__.py

@@ -128,8 +128,8 @@ class _NetflixAPI(object):
             was set to ``True`` in :py:meth:`~NetflixAPIV2.get_request_token`
 
         :Returns:
-            Returns the pair ``(access_token, access_token_secret)``
-        :rtype: (string, string)
+            Returns the triplet ``(user_id, access_token, access_token_secret)``
+        :rtype: (string, string, string)
         """
 
         # Step 3: Obtain access token
