@@ -5,7 +5,7 @@ except ImportError:
 
 setup(
     name="pyflix2",
-    version='0.1.4',
+    version='1.1.0',
     description="A python module for accessing Netflix REST webservice, both V1 and V2 supports oauth and oob.",
     long_description=open('README.rst').read() + '\n\n' +
                              open('HISTORY.rst').read(),
@@ -16,5 +16,5 @@ setup(
     include_package_data=True,
     license=open('LICENSE').read(),
     packages = ['pyflix2'],
-    install_requires=['requests', 'requests-oauth']
+    install_requires=['requests', 'requests-oauthlib']
 )

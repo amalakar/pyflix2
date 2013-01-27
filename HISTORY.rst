@@ -2,9 +2,11 @@
 
 History
 -------
-0.1.4 ()
+0.2.0 (2013-01-26)
 ++++++++++++++++++
 - Issue #6: Add support for downloading full catalog in lib as well as in command line 
+- Issue #8: Incorporate netflix api change to api-public.netflix.com
+- Issue #9: Update codebase to work with requests v1.1.0
 
 0.1.3 (2012-07-09)
 ++++++++++++++++++

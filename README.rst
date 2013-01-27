@@ -32,14 +32,14 @@ Example
     for title in movies['autocomplete']['title']:
         print title
 
-    user = netflix.get_user('access_token', 'access_token_secret')
+    user = netflix.get_user('use_id', 'access_token', 'access_token_secret')
     reco = user.get_reccomendations()
     for movie in reco['recommendations']:
         print movie['title']['regular']
 
 Note
     - Here ``appname``, ``key`` and ``shared_secret`` needs to be obtained from: http://developer.netflix.com/apps/mykeys.
-    - The ``access_token``, ``access_token_secret`` needs to be obtained programmatically using ``get_request_token``
+    - The ``user_id``, ``access_token``, ``access_token_secret`` needs to be obtained programmatically using ``get_request_token``
       and ``get_access_token``
 
 

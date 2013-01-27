@@ -4,6 +4,7 @@ import simplejson
 from pprint import pprint
 from pyflix2 import *
 import ConfigParser
+import codecs
 
 DUMP_OBJECTS = True
 
@@ -11,29 +12,29 @@ class TestNetflixAPIV1(unittest.TestCase):
 
     def setUp(self):
         config_parser = ConfigParser.ConfigParser()
-        config_parser.read(['pyflix2.cfg', os.path.expanduser('~/.pyflix2.cfg')])
+        config_parser.readfp(codecs.open(os.path.expanduser(u'~/.pyflix2.cfg'), u"r", u"utf8"))
         self.config = lambda key: config_parser.get('pyflix2', key)
         self.netflix = NetflixAPIV1( appname=self.config('app_name'), 
                                    consumer_key=self.config('consumer_key'),
                                    consumer_secret=self.config('consumer_secret')) 
                                    #logger=sys.stderr)
-        self.user = self.netflix.get_user( self.config('access_token'),
-                                   self.config('access_token_secret'))
+        self.user = self.netflix.get_user(self.config('user_id'), self.config('access_token'),
+            self.config('access_token_secret'))
 
     def test_token_functions(self):
         pass
 
 
     def test_catalog_functions(self):
-        titles = self.netflix.search_titles('Matrix', max_results=2)
+        titles = self.netflix.search_titles(u'Matrix', max_results=2)
         for title in titles[u'catalog_titles'][u'catalog_title']:
             self.assertIsNotNone(title[u'title'][u'regular'])
             self.assertIsNotNone(title[u'id'])
-        self.assertEqual(len(titles['catalog_titles'][u'catalog_title']), 2) 
+        self.assertEqual(len(titles[u'catalog_titles'][u'catalog_title']), 2)
 
-        autocomplete_titles = self.netflix.title_autocomplete("matrix")
+        autocomplete_titles = self.netflix.title_autocomplete(u"matrix")
         for title in autocomplete_titles[u'autocomplete'][u'autocomplete_item']:
-            self.assertIn('matrix', title['title']['short'].lower())
+            self.assertIn(u'matrix', title['title']['short'].lower())
         people = self.netflix.search_people('Flip Wilson', max_results=5)
         self.assertIsNotNone(people['people'])
         person = self.netflix.get_person(people['people']['person'][0]['id'])
@@ -105,13 +106,13 @@ class TestNetflixAPIV2(unittest.TestCase):
 
     def setUp(self):
         config_parser = ConfigParser.ConfigParser()
-        config_parser.read(['pyflix2.cfg', os.path.expanduser('~/.pyflix2.cfg')])
+        config_parser.readfp(codecs.open(os.path.expanduser(u'~/.pyflix2.cfg'), u"r", u"utf8"))
         self.config = lambda key: config_parser.get('pyflix2', key)
         self.netflix = NetflixAPIV2( appname=self.config('app_name'), 
                                    consumer_key=self.config('consumer_key'),
                                    consumer_secret=self.config('consumer_secret'), 
                                    logger=sys.stderr)
-        self.user = self.netflix.get_user( self.config('access_token'),
+        self.user = self.netflix.get_user(self.config('user_id'), self.config('access_token'),
                                    self.config('access_token_secret'))
 
     def test_token_functions(self):
@@ -155,7 +156,7 @@ class TestNetflixAPIV2(unittest.TestCase):
 
     def test_full_catalog(self):
         # Following call downloads the whole catalog so it is bit of heavy-lifting
-        catalog = self.netflix.get_catalog(False)
+        catalog = self.netflix.get_catalog()
         self.assertIsNotNone(catalog)
 
     def test_user_details(self):
@@ -178,7 +179,7 @@ class TestNetflixAPIV2(unittest.TestCase):
                 pprint.pprint(e)
         #dump_object(feeds)
 
-    def test_user_user_states(self):
+    def test_user_states(self):
         title_states = self.user.get_title_states(["http://api.netflix.com/catalog/titles/movies/20557937", "http://api.netflix.com/catalog/titles/movies/60027695"]) 
         self.assertIsNotNone(title_states)
         #dump_object(title_states)
@@ -212,7 +213,9 @@ class TestNetflixAPIV2(unittest.TestCase):
         self.assertIsNotNone(queues_is)
         dump_object(queues_is)
 
+    # Not supported by netflix anymore
     def test_user_rental_history(self):
+        pass
         rental_history = self.user.get_rental_history(max_results=25)
         self.assertIsNotNone(rental_history)
         dump_object(rental_history)

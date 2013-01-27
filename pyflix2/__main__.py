@@ -7,8 +7,10 @@ import time
 import sys
 import pprint
 from time import gmtime, strftime
+import codecs
+
 verbose = False
-# WARNING : This exampel script is work in progrees, things may be broken
+# WARNING : This example script is work in progress, things may be broken
 
 
 def log(msg, mandatory=False):
@@ -26,33 +28,33 @@ def get_authorization(netflix, appname):
     (request_token, request_token_secret, url) = netflix.get_request_token(use_OOB = True)
     print "Go to %s sign in and grant permission to netflix account to [%s]" % (url, appname)
 
-    verification_code = raw_input('Please enter Verifier Code: ')
-    (access_token, access_token_secret) = netflix.get_access_token(request_token, request_token_secret, verification_code)
+    verification_code = unicode(raw_input('Please enter Verifier Code: '), 'utf8')
+    (user_id, access_token, access_token_secret) = netflix.get_access_token(request_token, request_token_secret, verification_code)
     print "now put this access_token / access_token_secret in ~/.pyflix2.cfg so you don't have to re-authorize again:\n\n" + \
-            "access_token = %s\naccess_token_secret = %s\n\n" % (access_token, access_token_secret)
+            "user_id = %s\naccess_token = %s\naccess_token_secret = %s\n\n" % (user_id, access_token, access_token_secret)
 
-    return netflix.get_user(access_token, access_token_secret)
+    return netflix.get_user(user_id, access_token, access_token_secret)
 
 def autocomplete_search(netflix, term, partial_match=True, filter=None):
     if partial_match:
         # Find the exact movie title by calling autocomplete API then ask user
-        log("Calling autocomplete API for search string: '%s'" % term)
+        log(u"Calling autocomplete API for search string: '%s'" % term)
         if filter:
-            log("Looking only for movies available on: %s" % filter)
+            log(u"Looking only for movies available on: %s" % filter)
         titles = netflix.title_autocomplete(term, filter=filter)
         movies = []
-        if 'title' in titles['autocomplete']:
-            log("Number of results returned %d for search string: '%s'" % 
-                    (len(titles['autocomplete']['title']), term), True)
-            movies = titles['autocomplete']['title']
+        if u'title' in titles[u'autocomplete']:
+            log(u"Number of results returned %d for search string: '%s'" %
+                    (len(titles[u'autocomplete'][u'title']), term), True)
+            movies = titles[u'autocomplete'][u'title']
         else:
-            print("No results found for term: '%s'" % term)
+            print(u"No results found for term: '%s'" % term)
             return
 
         # Ask user which movie she meant
         for i in range(0, len(movies)):
-            print("(%d)  %s" % (i, movies[i]))
-        choice = int(raw_input("\nPlease enter the movie you are interested in: "))
+            print(u"(%d)  %s" % (i, movies[i]))
+        choice = int(raw_input(u"\nPlease enter the movie you are interested in: "))
         user_movie_title = movies[choice]
     else:
         # Otherwise we know the exact movie name
@@ -65,30 +67,35 @@ def autocomplete_search(netflix, term, partial_match=True, filter=None):
     if movie:
         movie_id = movie['id']
         movie_details = netflix.get_title(movie_id)
-        movie_formats = netflix.get_title(movie_id, category="format_availability")['delivery_formats']
-        print "\nAverage Rating: ", movie_details['catalog_title']['average_rating']
+        movie_formats = netflix.get_title(movie_id, category=u"format_availability")[u'delivery_formats']
+        print u"\nAverage Rating: ", movie_details[u'catalog_title'][u'average_rating']
 
         genres = []
-        for genre in movie_details['catalog_title']['genres']:
-            genres.append(genre['name'])
+        for genre in movie_details[u'catalog_title'][u'genres']:
+            genres.append(genre[u'name'])
 
-        print "Genre: %s" % ", ".join(genres)
+        print u"Genre: %s" % ", ".join(genres)
 
-        print "ID: ", movie_details['catalog_title']['id']
-        print "Webpage: ", movie_details['catalog_title']['web_page']
-        print "Release Year: ", movie_details['catalog_title']['release_year']
+        print u"ID: ", movie_details[u'catalog_title'][u'id']
+        print u"Webpage: ", movie_details[u'catalog_title'][u'web_page']
+        print u"Release Year: ", movie_details[u'catalog_title'][u'release_year']
 
         for format,details in movie_formats.items():
             print format
-            print "\tFrom: ", get_time(details['available_from'])
-            print "\tTo: ", get_time(details['available_until'])
-            for audio, audio_details in details['languages_and_audio'].items():
+            if u'available_from' in details:
+                print u"\tFrom: ", get_time(details[u'available_from'])
+            if u'available_until' in details:
+                print u"\tTo: ", get_time(details[u'available_until'])
+            for audio, audio_details in details[u'languages_and_audio'].items():
                 a = []
-                for audio_detail in audio_details['audio']:
-                    a.append(audio_detail['label'])
-                print "\t%s ( %s )" % (audio, ", ".join(a))
+                for audio_detail in audio_details[u'audio']:
+                    if isinstance(audio_detail[u'label'], basestring):
+                        a.append(audio_detail[u'label'])
+                    else:
+                        a.append(", ".join(audio_detail[u'label']))
+                print u"\t%s ( %s )" % (audio, u", ".join(a))
     else:
-        print("No results found for term: '%s'" % term)
+        print(u"No results found for term: '%s'" % term)
         return
 
 
@@ -99,41 +106,41 @@ def print_full_catalog(netflix):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Command line utility for interacting with Netflix')
+    parser = argparse.ArgumentParser(description=u'Command line utility for interacting with Netflix')
 
-    parser.add_argument("-v", "--verbose", action="store_true",
-                                            help="Increse verbosity")
+    parser.add_argument(u"-v", u"--verbose", action=u"store_true",
+                                            help=u"Increse verbosity")
 
-    parser.add_argument("-f", "--full-catalog", action="store_true", 
-                                            help="Download the whole catalog of netflix")
-    parser.add_argument("-a", "--authorize", action="store_true", 
-                        help="Get access token/access token secret for the user")
-    parser.add_argument("-s", "--search", type=str, help="Search for a movie title")
-    parser.add_argument("-x", "--exact-match", action="store_false", help="Look for exact match")
+    parser.add_argument(u"-f", u"--full-catalog", action=u"store_true",
+                                            help=u"Download the whole catalog of netflix")
+    parser.add_argument(u"-a", u"--authorize", action=u"store_true",
+                        help=u"Get access token/access token secret for the user")
+    parser.add_argument(u"-s", u"--search", type=str, help=u"Search for a movie title")
+    parser.add_argument(u"-x", u"--exact-match", action=u"store_false", help=u"Look for exact match")
     group = parser.add_mutually_exclusive_group()
-    group.add_argument("-d", "--disc-only", action="store_true", help="Search only for blu-ray/dvd etc")
-    group.add_argument("-i", "--instant-only", action="store_true", help="Search only for instant titles")
+    group.add_argument(u"-d", u"--disc-only", action=u"store_true", help=u"Search only for blu-ray/dvd etc")
+    group.add_argument(u"-i", u"--instant-only", action=u"store_true", help=u"Search only for instant titles")
     args = parser.parse_args()
 
     verbose = args.verbose
 
     config_parser = ConfigParser.ConfigParser()
-    config_parser.read(['pyflix2.cfg', os.path.expanduser('~/.pyflix2.cfg')])
-    config = lambda key: config_parser.get('pyflix2', key).strip()
-    netflix = NetflixAPIV2( appname=config('app_name'),
-                                   consumer_key=config('consumer_key'),
-                                   consumer_secret=config('consumer_secret'),
+    config_parser.readfp(codecs.open(os.path.expanduser(u'~/.pyflix2.cfg'), u"r", u"utf8"))
+    config = lambda key: config_parser.get(u'pyflix2', key).strip()
+    netflix = NetflixAPIV2( appname=config(u'app_name'),
+                                   consumer_key=config(u'consumer_key'),
+                                   consumer_secret=config(u'consumer_secret'),
                                    )
 
     #user = netflix.get_user(config('access_token'), config('access_token_secret'))
 
     if args.authorize:
-        user = get_authorization(netflix, config('app_name'))
+        user = get_authorization(netflix, config(u'app_name'))
     elif args.search:
         if args.disc_only:
-            filter = 'disc'
+            filter = u'disc'
         elif args.instant_only:
-            filter = 'instant'
+            filter = u'instant'
         else:
             filter = None
 
