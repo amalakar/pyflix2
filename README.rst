@@ -1,11 +1,14 @@
 pyflix2: python module for accessing Netflix webservice
 =======================================================
 
-[![Version](https://pypip.in/v/pyflix2/badge.png)](https://crate.io/packages/pyflix2/)   [![Downloads](https://pypip.in/d/pyflix2/badge.png)](https://crate.io/packages/pyflix2/)
-Click on my |ImageLink|_
+|VersionLink|_ |NumDownloadLink|_
 
-.. |ImageLink| image:: https://pypip.in/v/pyflix2/badge.png
-.. _ImageLink: https://crate.io/packages/pyflix2/
+.. |VersionLink| image:: https://pypip.in/v/pyflix2/badge.png
+.. _VersionLink: https://crate.io/packages/pyflix2/
+
+.. |NumDownloadLink| image:: https://pypip.in/d/pyflix2/badge.png
+.. _NumDownloadLink: https://crate.io/packages/pyflix2/
+
 
 
 Introduction
