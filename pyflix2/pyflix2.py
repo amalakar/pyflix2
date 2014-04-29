@@ -12,7 +12,7 @@ from urlparse import urlparse, parse_qs, parse_qsl, urlunparse
 import urllib
 import json
 
-__version__ = u"0.2.0"
+__version__ = u"0.2.1"
 
 BASE_URL= u'http://api-public.netflix.com'
 AUTH_BASE_URL = BASE_URL 
@@ -311,7 +311,7 @@ class _NetflixAPI(object):
             print "Caught exception [%s] while trying to log msg, \
                                   ignored: %s" % (sys.exc_info()[0], msg)
 
-    def _request(self, method, url, data={}, headers={}, client=None):
+    def _request(self, method, url, data={}, headers={}, client=None, stream=False):
         """
         """
         if self._api_version == 2.0:
@@ -332,9 +332,9 @@ class _NetflixAPI(object):
             client = self._client
 
         if method is "get":
-            r = client.request(method, url, params=data, headers=headers, allow_redirects=True)
+            r = client.request(method, url, params=data, headers=headers, allow_redirects=True, stream=stream)
         else:
-            r = client.request(method, url, data=data, headers=headers, allow_redirects=True)
+            r = client.request(method, url, data=data, headers=headers, allow_redirects=True, stream=stream)
 
         self._log((r.request.method, r.url, r.status_code))
         if r.status_code < 200 or r.status_code >= 300:
@@ -419,7 +419,7 @@ class NetflixAPIV1(_NetflixAPI):
                 return movie
         return None
 
-    def get_catalog(self):
+    def get_catalog(self, chunk_size=4096):
         """Retrieve a complete index of all instant-watch titles in the Netflix catalog
 
         url: /catalog/titles/index
@@ -428,8 +428,7 @@ class NetflixAPIV1(_NetflixAPI):
             Returns an iter object which can be written to disk etc
         """
         url_path = '/catalog/titles/index'
-        r = self._request("get", url_path, headers={'Accept-Encoding': 'gzip'}, data={'output': None})
-        return r
+        return self._request("get", url_path, headers={'Accept-Encoding': 'gzip'}, data={'output': None}, stream=True).iter_content(chunk_size)
 
 class NetflixAPIV2(_NetflixAPI):
     """ Provides functional interface to Netflix V2 REST api"""
@@ -507,7 +506,7 @@ class NetflixAPIV2(_NetflixAPI):
                 return movie
         return None
 
-    def get_catalog(self):
+    def get_catalog(self, chunk_size=4096):
         """Retrieve a complete index of all instant-watch titles in the Netflix catalog
 
         url: /catalog/titles/full
@@ -516,9 +515,7 @@ class NetflixAPIV2(_NetflixAPI):
             Returns an iter object which can be written to disk etc
         """
         url_path = '/catalog/titles/full'
-        r = self._request("get", url_path, headers={'Accept-Encoding': 'gzip'}, data={'output': None})
-        return r
-
+        return self._request("get", url_path, headers={'Accept-Encoding': 'gzip'}, data={'output': None}, stream=True).iter_content(chunk_size)
 
 class User:
     def __init__(self, netflix_client, user_id, access_token, access_token_secret):

@@ -2,6 +2,10 @@
 
 History
 -------
+0.2.1 (2014-04-29)
+++++++++++++++++++
+- Adding a new method to download the entire catalog into a file.
+
 0.2.0 (2013-01-26)
 ++++++++++++++++++
 - Issue #6: Add support for downloading full catalog in lib as well as in command line 
