@@ -34,6 +34,14 @@ SORT_ORDER = ["queue_sequence", "date_added", "alphabetical"]
 RENTAL_HISTORY_TYPE = ['shipped', 'returned', 'watched']
 """ Allowed type to use while calling :py:meth:`~User.get_rental_history`"""
 
+GENERIC_CATALOG_TYPES = ['streaming', 'dvd']
+
+CATALOG_TYPES_V1 = ['index'] + GENERIC_CATALOG_TYPES
+""" Allowed catalog type to use while calling :py:meth:`~NetflixAPIV1.get_catalog`"""
+
+CATALOG_TYPES_V2 = ['full'] + GENERIC_CATALOG_TYPES
+""" Allowed catalog type to use while calling :py:meth:`~NetflixAPIV2.get_catalog`"""
+
 class NetflixError(Exception):
     """ Error thrown if the netflix api throws http error"""
     pass
@@ -419,15 +427,23 @@ class NetflixAPIV1(_NetflixAPI):
                 return movie
         return None
 
-    def get_catalog(self, chunk_size=4096):
+    def get_catalog(self, catalog_type='index', chunk_size=4096):
         """Retrieve a complete index of all instant-watch titles in the Netflix catalog
 
-        url: /catalog/titles/index
+        :param catalog_type: The type of catalog to fetch; see :py:data:`CATALOG_TYPES_V1`
+
+        URLs: 
+            /catalog/titles/index
+            /catalog/titles/streaming
+            /catalog/titles/dvd
 
         :Returns:
             Returns an iter object which can be written to disk etc
         """
-        url_path = '/catalog/titles/index'
+        if not CATALOG_TYPES_V1.index(catalog_type):
+            raise NetflixError("Invalid catalog type")
+
+        url_path = '/catalog/titles/%s' % catalog_type
         return self._request("get", url_path, headers={'Accept-Encoding': 'gzip'}, data={'output': None}, stream=True).iter_content(chunk_size)
 
 class NetflixAPIV2(_NetflixAPI):
@@ -506,15 +522,25 @@ class NetflixAPIV2(_NetflixAPI):
                 return movie
         return None
 
-    def get_catalog(self, chunk_size=4096):
-        """Retrieve a complete index of all instant-watch titles in the Netflix catalog
+    def get_catalog(self, catalog_type='full', chunk_size=4096):
+        """Retrieve a complete index of all instant-watch/dvd titles in the Netflix catalog
 
-        url: /catalog/titles/full
+        :param catalog_type: The type of catalog to fetch; see :py:data:`CATALOG_TYPES_V2`
+
+        URLs:
+            /catalog/titles/full
+            /catalog/titles/streaming
+            /catalog/titles/dvd
 
         :Returns:
             Returns an iter object which can be written to disk etc
         """
-        url_path = '/catalog/titles/full'
+        try:
+            is_valid = CATALOG_TYPES_V2.index(catalog_type)
+        except ValueError:
+            raise NetflixError("Invalid catalog type")
+
+        url_path = '/catalog/titles/%s' % catalog_type
         return self._request("get", url_path, headers={'Accept-Encoding': 'gzip'}, data={'output': None}, stream=True).iter_content(chunk_size)
 
 class User:
