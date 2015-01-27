@@ -427,7 +427,7 @@ class NetflixAPIV1(_NetflixAPI):
                 return movie
         return None
 
-    def get_catalog(self, catalog_type='index', raw=False, chunk_size=4096):
+    def get_catalog(self, catalog_type='index', chunk_size=4096, raw=False):
         """Retrieve a complete index of all instant-watch titles in the Netflix catalog
 
         :param catalog_type: The type of catalog to fetch; see :py:data:`CATALOG_TYPES_V1`
@@ -525,7 +525,7 @@ class NetflixAPIV2(_NetflixAPI):
                 return movie
         return None
 
-    def get_catalog(self, catalog_type='full', raw=False, chunk_size=4096):
+    def get_catalog(self, catalog_type='full', chunk_size=4096, raw=False):
         """Retrieve a complete index of all instant-watch/dvd titles in the Netflix catalog
 
         :param catalog_type: The type of catalog to fetch; see :py:data:`CATALOG_TYPES_V2`
