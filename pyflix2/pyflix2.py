@@ -427,7 +427,7 @@ class NetflixAPIV1(_NetflixAPI):
                 return movie
         return None
 
-    def get_catalog(self, catalog_type='index', chunk_size=4096):
+    def get_catalog(self, catalog_type='index', chunk_size=4096, raw=False):
         """Retrieve a complete index of all instant-watch titles in the Netflix catalog
 
         :param catalog_type: The type of catalog to fetch; see :py:data:`CATALOG_TYPES_V1`
@@ -444,7 +444,10 @@ class NetflixAPIV1(_NetflixAPI):
             raise NetflixError("Invalid catalog type")
 
         url_path = '/catalog/titles/%s' % catalog_type
-        return self._request("get", url_path, headers={'Accept-Encoding': 'gzip'}, data={'output': None}, stream=True).iter_content(chunk_size)
+        resp = self._request("get", url_path, headers={'Accept-Encoding': 'gzip'}, data={'output': None}, stream=True)
+        if raw:
+            return resp.raw
+        return resp.iter_content(chunk_size)
 
 class NetflixAPIV2(_NetflixAPI):
     """ Provides functional interface to Netflix V2 REST api"""
@@ -522,7 +525,7 @@ class NetflixAPIV2(_NetflixAPI):
                 return movie
         return None
 
-    def get_catalog(self, catalog_type='full', chunk_size=4096):
+    def get_catalog(self, catalog_type='full', chunk_size=4096, raw=False):
         """Retrieve a complete index of all instant-watch/dvd titles in the Netflix catalog
 
         :param catalog_type: The type of catalog to fetch; see :py:data:`CATALOG_TYPES_V2`
@@ -541,7 +544,10 @@ class NetflixAPIV2(_NetflixAPI):
             raise NetflixError("Invalid catalog type")
 
         url_path = '/catalog/titles/%s' % catalog_type
-        return self._request("get", url_path, headers={'Accept-Encoding': 'gzip'}, data={'output': None}, stream=True).iter_content(chunk_size)
+        resp = self._request("get", url_path, headers={'Accept-Encoding': 'gzip'}, data={'output': None}, stream=True)
+        if raw:
+            return resp.raw
+        return resp.iter_content(chunk_size)
 
 class User:
     def __init__(self, netflix_client, user_id, access_token, access_token_secret):
