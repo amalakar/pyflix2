@@ -1,14 +1,9 @@
 pyflix2: python module for accessing Netflix webservice
 =======================================================
 
-|VersionLink|_ |NumDownloadLink|_
-
-.. |VersionLink| image:: https://pypip.in/v/pyflix2/badge.png
-.. _VersionLink: https://crate.io/packages/pyflix2/
-
-.. |NumDownloadLink| image:: https://pypip.in/d/pyflix2/badge.png
-.. _NumDownloadLink: https://crate.io/packages/pyflix2/
-
+Netflix discontinuting developer program
+----------------------------------------
+Unfortunately netflix has stopped issuing new developer api keys: https://techcrunch.com/2013/03/08/netflix-stops-issuing-api-keys-to-new-developers-effectively-ending-its-developer-program/ I haven't tested if the api endpoint are still available or now.
 
 
 Introduction
